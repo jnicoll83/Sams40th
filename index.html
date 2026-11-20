@@ -1,0 +1,2203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Samantha's 40th Birthday Photo Bingo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts matching the poster typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Caveat:wght@700&family=Luckiest+Guy&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons & Confetti -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        poster: ['"Luckiest Guy"', 'cursive', 'sans-serif'],
+                        slab: ['"Alfa Slab One"', 'serif'],
+                        hand: ['"Caveat"', 'cursive'],
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        bingoPink: '#F45D96',
+                        bingoHotPink: '#E61E6E',
+                        bingoDark: '#141414',
+                        londonRed: '#C8102E',
+                        londonNavy: '#1B2A4A',
+                        paperCream: '#FAF8F5',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #262329;
+            background-image: radial-gradient(#3b3640 1px, transparent 1px);
+            background-size: 18px 18px;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        .scroll-touch {
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+
+        /* Poster Title 3D Outline Effect */
+        .poster-title-main {
+            text-shadow:
+                2px 2px 0px #ffffff,
+                -2px -2px 0px #ffffff,
+                2px -2px 0px #ffffff,
+                -2px 2px 0px #ffffff,
+                0px 4px 10px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Pink Brush Ribbon Effect */
+        .pink-brush-banner {
+            background: linear-gradient(135deg, #f23882 0%, #e11d6b 55%, #f45d96 100%);
+            box-shadow: 0 4px 0 #141414, 0 8px 16px rgba(225, 29, 107, 0.35);
+            transform: rotate(-1.5deg);
+        }
+
+        .pink-footer-ribbon {
+            background: linear-gradient(135deg, #f23882 0%, #e11d6b 100%);
+            box-shadow: 0 3px 0 #141414;
+            transform: rotate(-3deg);
+        }
+
+        /* Bingo Grid Cell Hover & Active Transitions */
+        .bingo-cell {
+            transition: transform 0.14s ease, box-shadow 0.14s ease;
+        }
+        .bingo-cell:active {
+            transform: scale(0.985);
+        }
+
+        /* Subtle paper texture for side sticky notes */
+        .sticky-note {
+            background: #fffdf9;
+            box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.14);
+            border: 1px solid rgba(20, 20, 20, 0.12);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f45d96;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="font-sans text-bingoDark min-h-dvh pb-10">
+
+    <!-- ========================================================= -->
+    <!-- TOP FLOATING APP TOOLBAR (Controls & Progress)            -->
+    <!-- ========================================================= -->
+    <nav class="sticky top-0 z-40 bg-bingoDark/95 backdrop-blur-md text-white border-b border-white/10 px-3 py-2.5 shadow-lg">
+        <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <!-- Left: Progress Pill -->
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-bingoHotPink flex items-center justify-center font-slab text-white text-base shadow">
+                    B
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span id="progress-label" class="text-xs sm:text-sm font-extrabold tracking-wide text-white">0 / 25 Stamped</span>
+                        <span id="lines-badge" class="hidden bg-amber-400 text-bingoDark text-[10px] font-black px-2 py-0.5 rounded-full uppercase">0 Lines</span>
+                    </div>
+                    <div class="w-28 sm:w-36 h-1.5 bg-white/15 rounded-full overflow-hidden mt-1">
+                        <div id="progress-bar" class="h-full bg-bingoPink transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Action Buttons -->
+            <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <button type="button" onclick="openCustomizeModal()" class="bg-white/10 hover:bg-white/20 active:scale-95 transition text-white text-xs font-bold px-2.5 py-2 rounded-lg flex items-center gap-1.5" title="Edit Name & Tasks">
+                    <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-bingoPink"></i>
+                    <span class="hidden sm:inline">Customize</span>
+                </button>
+
+                <button type="button" onclick="confirmShuffle()" class="bg-white/10 hover:bg-white/20 active:scale-95 transition text-white text-xs font-bold px-2.5 py-2 rounded-lg flex items-center gap-1.5" title="Shuffle New Card for Friends">
+                    <i data-lucide="shuffle" class="w-3.5 h-3.5 text-amber-300"></i>
+                    <span class="hidden sm:inline">New Card</span>
+                </button>
+
+                <button type="button" onclick="exportPosterPng()" id="export-btn" class="bg-bingoHotPink hover:bg-pink-600 active:scale-95 transition text-white text-xs font-bold px-3 py-2 rounded-lg shadow flex items-center gap-1.5">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>Save Poster PNG</span>
+                </button>
+
+                <button type="button" onclick="openEmailModal()" class="bg-amber-300 hover:bg-amber-400 active:scale-95 transition text-bingoDark text-xs font-extrabold px-3 py-2 rounded-lg shadow flex items-center gap-1.5">
+                    <i data-lucide="mail" class="w-3.5 h-3.5 text-bingoHotPink"></i>
+                    <span>Email Results</span>
+                </button>
+
+                <button type="button" onclick="openShareModal()" class="bg-white text-bingoDark hover:bg-pink-50 active:scale-95 transition text-xs font-bold px-2.5 py-2 rounded-lg shadow flex items-center gap-1.5">
+                    <i data-lucide="share-2" class="w-3.5 h-3.5 text-bingoHotPink"></i>
+                    <span class="hidden sm:inline">Share</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Celebration Banner (Appears when 5-in-a-row Bingo is achieved) -->
+    <div id="bingo-banner" class="hidden max-w-4xl mx-auto px-3 pt-3">
+        <div class="bg-gradient-to-r from-bingoHotPink via-pink-600 to-londonNavy text-white rounded-2xl p-3.5 shadow-xl border-2 border-bingoDark flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <span class="bg-amber-300 text-bingoDark font-slab text-xs px-3 py-1.5 rounded-xl uppercase shadow">BINGO!</span>
+                <div>
+                    <h2 id="bingo-banner-title" class="font-poster text-lg sm:text-xl tracking-wide leading-none">FORTY & FABULOUS BINGO!</h2>
+                    <p id="bingo-banner-sub" class="text-xs text-pink-100 mt-0.5">You completed a line! Send your results by email or download your keepsake poster.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 ml-auto sm:ml-0">
+                <button type="button" onclick="openEmailModal()" class="bg-amber-300 text-bingoDark hover:bg-amber-400 font-extrabold text-xs px-3.5 py-2 rounded-xl shadow flex items-center gap-1.5 border border-bingoDark">
+                    <i data-lucide="mail" class="w-3.5 h-3.5 text-bingoHotPink"></i>
+                    <span>Email Results</span>
+                </button>
+                <button type="button" onclick="exportPosterPng()" class="bg-white text-bingoHotPink hover:bg-pink-50 font-bold text-xs px-3 py-2 rounded-xl shadow">
+                    Download Card
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MAIN SCRAPBOOK POSTER CONTAINER                            -->
+    <!-- ========================================================= -->
+    <main class="max-w-4xl mx-auto px-2 sm:px-4 pt-3 sm:pt-5">
+        <div id="poster-sheet" class="bg-white rounded-none sm:rounded-lg shadow-2xl border-[3px] border-bingoDark overflow-hidden">
+
+            <!-- 1. TOP ILLUSTRATED LONDON HEADER BANNER -->
+            <header class="relative bg-gradient-to-b from-[#dceaf5] via-[#eef5fa] to-white pt-3 pb-4 px-2 sm:px-5 overflow-hidden border-b-[3px] border-bingoDark">
+                <!-- Subtle Union Jack Background Rays (SVG) -->
+                <svg class="absolute inset-0 w-full h-full opacity-35 pointer-events-none" viewBox="0 0 800 220" preserveAspectRatio="none">
+                    <polygon points="400,110 210,0 295,0" fill="#C8102E" />
+                    <polygon points="400,110 505,0 590,0" fill="#C8102E" />
+                    <polygon points="400,110 345,0 455,0" fill="#1B2A4A" />
+                    <polygon points="400,110 130,0 185,0" fill="#1B2A4A" />
+                    <polygon points="400,110 615,0 670,0" fill="#1B2A4A" />
+                </svg>
+
+                <!-- Left London Skyline + Big Ben Silhouette (SVG) -->
+                <svg class="absolute left-0 bottom-0 h-28 sm:h-40 w-auto opacity-85 pointer-events-none" viewBox="0 0 220 160">
+                    <rect x="0" y="95" width="125" height="65" fill="#323b46" />
+                    <polygon points="10,95 20,70 30,95" fill="#323b46" />
+                    <polygon points="45,95 55,72 65,95" fill="#323b46" />
+                    <polygon points="80,95 90,74 100,95" fill="#323b46" />
+                    <rect x="132" y="42" width="34" height="118" fill="#2a323c" />
+                    <polygon points="132,42 149,8 166,42" fill="#1f262e" />
+                    <rect x="147" y="0" width="4" height="10" fill="#1f262e" />
+                    <circle cx="149" cy="64" r="11" fill="#fffdf5" stroke="#141414" stroke-width="2" />
+                    <line x1="149" y1="64" x2="149" y2="57" stroke="#141414" stroke-width="1.8" />
+                    <line x1="149" y1="64" x2="154" y2="64" stroke="#141414" stroke-width="1.8" />
+                </svg>
+
+                <!-- Right London Eye & Red Double-Decker Bus (SVG) -->
+                <svg class="absolute right-0 bottom-0 h-32 sm:h-44 w-auto pointer-events-none" viewBox="0 0 260 180">
+                    <g opacity="0.55" stroke="#3c4856" fill="none">
+                        <circle cx="135" cy="78" r="56" stroke-width="3.5" />
+                        <circle cx="135" cy="78" r="46" stroke-width="1.5" />
+                        <line x1="135" y1="22" x2="135" y2="134" stroke-width="1.2" />
+                        <line x1="79" y1="78" x2="191" y2="78" stroke-width="1.2" />
+                        <line x1="95" y1="38" x2="175" y2="118" stroke-width="1.2" />
+                        <line x1="175" y1="38" x2="95" y2="118" stroke-width="1.2" />
+                        <line x1="135" y1="78" x2="105" y2="165" stroke-width="4" />
+                        <line x1="135" y1="78" x2="165" y2="165" stroke-width="4" />
+                    </g>
+                    <g transform="translate(115, 92)">
+                        <rect x="0" y="0" width="138" height="74" rx="10" fill="#C8102E" stroke="#141414" stroke-width="2.5" />
+                        <rect x="6" y="7" width="126" height="22" rx="3" fill="#dceaf5" stroke="#141414" stroke-width="1.5" />
+                        <rect x="10" y="34" width="118" height="28" rx="2" fill="#ffffff" stroke="#141414" stroke-width="1.2" />
+                        <text x="69" y="44" text-anchor="middle" font-size="6.8" font-weight="800" fill="#141414" font-family="sans-serif">LONDON • ADVENTURE</text>
+                        <text x="69" y="54" text-anchor="middle" font-size="6.8" font-weight="800" fill="#C8102E" font-family="sans-serif">CAPTURE • CELEBRATE • REPEAT</text>
+                        <circle cx="32" cy="74" r="11" fill="#141414" />
+                        <circle cx="32" cy="74" r="4.5" fill="#d1d5db" />
+                        <circle cx="108" cy="74" r="11" fill="#141414" />
+                        <circle cx="108" cy="74" r="4.5" fill="#d1d5db" />
+                    </g>
+                </svg>
+
+                <!-- Top Row: Left Sticky Note | Crown + Main Title | Right Sticky Note -->
+                <div class="relative z-10 flex items-start justify-between gap-1 sm:gap-3">
+                    <div class="sticky-note rounded-md px-2 py-1.5 sm:px-3 sm:py-2 -rotate-6 shrink-0 mt-1">
+                        <p id="poster-note-tl" class="font-hand text-xs sm:text-lg leading-tight text-bingoDark font-bold text-center whitespace-pre-line">Same City
+Bigger Stories ♥</p>
+                    </div>
+
+                    <div class="flex-1 text-center pt-0.5">
+                        <div class="flex justify-center mb-0.5">
+                            <svg class="w-7 h-5 sm:w-9 sm:h-6 text-bingoDark" viewBox="0 0 48 32" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 26L3 9L16 17L24 5L32 17L45 9L42 26H6Z" fill="#ffffff" />
+                                <circle cx="24" cy="4" r="2" fill="currentColor" />
+                            </svg>
+                        </div>
+
+                        <h1 id="poster-title-1" class="font-poster poster-title-main text-3xl sm:text-5xl md:text-[54px] leading-[0.92] tracking-wide text-bingoDark uppercase">
+                            SAMANTHA'S
+                        </h1>
+
+                        <div class="inline-block pink-brush-banner px-3.5 sm:px-7 py-1 sm:py-1.5 rounded-md my-1 border-2 border-bingoDark">
+                            <span id="poster-title-2" class="font-poster text-xl sm:text-3xl md:text-4xl tracking-wider text-white uppercase block leading-none">
+                                40TH BIRTHDAY
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-center gap-1.5 mt-0.5">
+                            <span id="poster-title-3" class="font-hand font-bold text-2xl sm:text-4xl tracking-wide text-bingoDark uppercase leading-none">
+                                PHOTO BINGO
+                            </span>
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-bingoHotPink" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="sticky-note rounded-md px-2 py-1.5 sm:px-3 sm:py-2 rotate-6 shrink-0 mt-1">
+                        <p id="poster-note-tr" class="font-hand text-xs sm:text-lg leading-tight text-bingoDark font-bold text-center whitespace-pre-line">40 Looks
+Good On You! ♥</p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 2. B-I-N-G-O 5x5 SCRAPBOOK GRID -->
+            <section class="p-1.5 sm:p-3 bg-white">
+                <div class="border-[2.5px] border-bingoDark">
+                    <div class="grid grid-cols-5 bg-bingoPink border-b-[2.5px] border-bingoDark">
+                        <div class="py-1.5 sm:py-2.5 text-center font-slab text-2xl sm:text-4xl text-bingoDark border-r-[2.5px] border-bingoDark select-none">B</div>
+                        <div class="py-1.5 sm:py-2.5 text-center font-slab text-2xl sm:text-4xl text-bingoDark border-r-[2.5px] border-bingoDark select-none">I</div>
+                        <div class="py-1.5 sm:py-2.5 text-center font-slab text-2xl sm:text-4xl text-bingoDark border-r-[2.5px] border-bingoDark select-none">N</div>
+                        <div class="py-1.5 sm:py-2.5 text-center font-slab text-2xl sm:text-4xl text-bingoDark border-r-[2.5px] border-bingoDark select-none">G</div>
+                        <div class="py-1.5 sm:py-2.5 text-center font-slab text-2xl sm:text-4xl text-bingoDark select-none">O</div>
+                    </div>
+
+                    <div id="bingo-grid" class="grid grid-cols-5 bg-white">
+                        <!-- Dynamically rendered by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. BOTTOM LONDON SKYLINE FOOTER BANNER -->
+            <footer class="relative bg-gradient-to-t from-[#dceaf5] via-[#f4f8fc] to-white pt-3 pb-7 sm:pb-10 px-3 sm:px-6 overflow-hidden border-t border-stone-200">
+                <div class="relative z-10 flex items-center justify-between gap-2">
+                    <p id="poster-note-bl" class="font-hand text-xs sm:text-lg leading-tight font-bold text-bingoDark -rotate-2 whitespace-pre-line">Iconic Places
+Ridiculous Challenges
+Unforgettable Memories ♥</p>
+
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-hand text-bingoHotPink text-xl sm:text-3xl font-bold">♥</span>
+                        <div class="pink-footer-ribbon px-3 sm:px-6 py-1 sm:py-1.5 rounded-lg border-2 border-bingoDark text-center">
+                            <p id="poster-footer-ribbon" class="font-hand font-bold text-sm sm:text-2xl leading-none text-white tracking-wide whitespace-pre-line">LONDON CALLING
+(AND SO ARE WE!)</p>
+                        </div>
+                        <span class="font-hand text-bingoHotPink text-xl sm:text-3xl font-bold">♥</span>
+                    </div>
+
+                    <p id="poster-note-br" class="font-hand text-xs sm:text-lg leading-tight font-bold text-bingoDark rotate-2 text-right whitespace-pre-line">Adventure
+Friendship
+Forty & Fabulous ♥</p>
+                </div>
+
+                <svg class="absolute bottom-0 left-0 w-full h-9 sm:h-14 text-[#182232] pointer-events-none" viewBox="0 0 1000 70" preserveAspectRatio="none">
+                    <rect x="0" y="58" width="1000" height="12" fill="currentColor" />
+                    <rect x="42" y="14" width="16" height="44" fill="currentColor" />
+                    <polygon points="42,14 50,2 58,14" fill="currentColor" />
+                    <rect x="75" y="34" width="38" height="24" fill="currentColor" />
+                    <polygon points="155,58 166,10 177,58" fill="currentColor" />
+                    <rect x="210" y="28" width="28" height="30" fill="currentColor" />
+                    <path d="M295 58 V38 A22 22 0 0 1 339 38 V58 Z" fill="currentColor" />
+                    <rect x="315" y="10" width="4" height="8" fill="currentColor" />
+                    <rect x="435" y="20" width="16" height="38" fill="currentColor" />
+                    <polygon points="435,20 443,10 451,20" fill="currentColor" />
+                    <rect x="535" y="20" width="16" height="38" fill="currentColor" />
+                    <polygon points="535,20 543,10 551,20" fill="currentColor" />
+                    <rect x="451" y="28" width="84" height="5" fill="currentColor" />
+                    <rect x="451" y="45" width="84" height="4" fill="currentColor" />
+                    <circle cx="780" cy="34" r="24" fill="none" stroke="currentColor" stroke-width="2.5" />
+                    <line x1="780" y1="34" x2="766" y2="58" stroke="currentColor" stroke-width="2.5" />
+                    <line x1="780" y1="34" x2="794" y2="58" stroke="currentColor" stroke-width="2.5" />
+                    <rect x="845" y="24" width="34" height="34" fill="currentColor" />
+                    <rect x="905" y="16" width="24" height="42" fill="currentColor" />
+                    <rect x="945" y="32" width="40" height="26" fill="currentColor" />
+                </svg>
+            </footer>
+        </div>
+
+        <p class="text-center text-xs text-stone-300 mt-3 px-4">
+            Every square starts with its London card scene. Tap a photo box or <strong class="text-pink-300">Camera</strong> to snap your own photo, or tap <strong class="text-bingoPink">Stamp</strong> to mark it done!
+        </p>
+    </main>
+
+    <!-- Hidden File Input for Camera / Gallery Upload -->
+    <input type="file" id="photo-file-input" accept="image/*" class="hidden" onchange="handlePhotoSelected(event)">
+
+    <!-- ========================================================= -->
+    <!-- MODAL 1: TILE PHOTO & COMPLETION MODAL                    -->
+    <!-- ========================================================= -->
+    <div id="tile-modal" class="fixed inset-0 bg-black/65 backdrop-blur-sm z-50 hidden items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90dvh] overflow-y-auto scroll-touch p-5 shadow-2xl border-t-4 sm:border-4 border-bingoDark">
+            <div class="flex items-start justify-between gap-3 mb-3">
+                <div>
+                    <span id="modal-tile-badge" class="inline-block bg-bingoPink text-bingoDark font-slab text-xs px-2.5 py-0.5 rounded-md border border-bingoDark mb-1">
+                        B • #1
+                    </span>
+                    <h3 id="modal-tile-title" class="font-bold text-base sm:text-lg text-bingoDark leading-snug">
+                        Take a selfie with a red phone box
+                    </h3>
+                </div>
+                <button type="button" onclick="closeTileModal()" class="p-2 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 shrink-0">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div id="modal-photo-preview-wrap" class="relative w-full aspect-[4/3] rounded-2xl border-2 border-bingoDark bg-paperCream overflow-hidden flex flex-col items-center justify-center mb-4 shadow-sm">
+                <img id="modal-photo-img" src="" alt="Challenge scene or proof" class="hidden w-full h-full object-cover" />
+                <div id="modal-photo-placeholder" class="text-center p-4">
+                    <div class="w-12 h-12 rounded-full bg-pink-100 text-bingoHotPink flex items-center justify-center mx-auto mb-2">
+                        <i data-lucide="camera" class="w-6 h-6"></i>
+                    </div>
+                    <p class="text-xs font-bold text-stone-700">No photo in square</p>
+                    <p class="text-[11px] text-stone-500 mt-0.5">Snap a picture, upload from gallery, or reset card scene</p>
+                </div>
+            </div>
+
+            <div class="space-y-2.5">
+                <button type="button" onclick="triggerPhotoPicker()" class="w-full py-3 px-4 rounded-xl bg-bingoHotPink hover:bg-pink-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md border-2 border-bingoDark">
+                    <i data-lucide="camera" class="w-4 h-4"></i>
+                    <span id="modal-upload-btn-text">Replace / Camera Photo</span>
+                </button>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="toggleTileCheckOnly()" id="modal-check-btn" class="py-2.5 px-3 rounded-xl bg-paperCream hover:bg-stone-100 text-bingoDark font-bold text-xs flex items-center justify-center gap-1.5 border-2 border-bingoDark">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+                        <span id="modal-check-btn-text">Toggle Done / Stamp</span>
+                    </button>
+
+                    <button type="button" onclick="resetSingleTileScene()" id="modal-reset-scene-btn" class="py-2.5 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs flex items-center justify-center gap-1.5 border-2 border-amber-400">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4 text-amber-700"></i>
+                        <span>Reset Card Scene</span>
+                    </button>
+                </div>
+
+                <button type="button" onclick="clearTileData()" id="modal-clear-btn" class="w-full py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs flex items-center justify-center gap-1.5 border border-rose-200">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    <span>Remove Photo & Unstamp Square</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL 2: CUSTOMIZE EVENT & PROMPTS MODAL                  -->
+    <!-- ========================================================= -->
+    <div id="customize-modal" class="fixed inset-0 bg-black/65 backdrop-blur-sm z-50 hidden items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-xl w-full max-h-[90dvh] flex flex-col shadow-2xl border-4 border-bingoDark">
+            <div class="p-5 pb-3 border-b border-stone-200 flex items-center justify-between shrink-0">
+                <div>
+                    <h3 class="font-poster text-xl text-bingoDark tracking-wide uppercase">Customize Bingo Poster</h3>
+                    <p class="text-xs text-stone-500">Edit the title, side notes, default email, or any of the 25 challenges</p>
+                </div>
+                <button type="button" onclick="closeCustomizeModal()" class="p-2 rounded-full bg-stone-100 hover:bg-stone-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-5 overflow-y-auto scroll-touch space-y-4 flex-1">
+                <div class="bg-paperCream p-3.5 rounded-2xl border border-stone-200 space-y-3">
+                    <p class="text-xs font-extrabold uppercase tracking-wider text-bingoHotPink">Poster Header, Notes & Email</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-stone-600 mb-1">Main Name / Headline</label>
+                            <input type="text" id="input-title1" class="w-full px-3 py-2 rounded-xl border-2 border-stone-300 focus:border-bingoHotPink focus:outline-none text-sm font-bold" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-stone-600 mb-1">Pink Ribbon Text</label>
+                            <input type="text" id="input-title2" class="w-full px-3 py-2 rounded-xl border-2 border-stone-300 focus:border-bingoHotPink focus:outline-none text-sm font-bold" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-stone-600 mb-1">Top-Left Note</label>
+                            <input type="text" id="input-note-tl" class="w-full px-3 py-2 rounded-xl border-2 border-stone-300 focus:border-bingoHotPink focus:outline-none text-sm font-semibold" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-stone-600 mb-1">Top-Right Note</label>
+                            <input type="text" id="input-note-tr" class="w-full px-3 py-2 rounded-xl border-2 border-stone-300 focus:border-bingoHotPink focus:outline-none text-sm font-semibold" />
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-bold text-stone-600 mb-1">Default Results Email</label>
+                            <input type="email" id="input-default-email" placeholder="jnicoll83@googlemail.com" class="w-full px-3 py-2 rounded-xl border-2 border-stone-300 focus:border-bingoHotPink focus:outline-none text-sm font-semibold" />
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-extrabold uppercase tracking-wider text-bingoHotPink">25 Photo Challenges</p>
+                        <button type="button" onclick="resetToSamanthaDefaults()" class="text-xs font-bold text-stone-500 hover:text-bingoHotPink underline">
+                            Restore Original 25 & Scenes
+                        </button>
+                    </div>
+                    <div id="custom-tasks-list" class="space-y-2">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-stone-200 bg-paperCream rounded-b-3xl flex gap-2.5 shrink-0">
+                <button type="button" onclick="closeCustomizeModal()" class="flex-1 py-2.5 rounded-xl border-2 border-stone-300 font-bold text-sm text-stone-700 hover:bg-white">
+                    Cancel
+                </button>
+                <button type="button" onclick="saveCustomizations()" class="flex-1 py-2.5 rounded-xl bg-bingoHotPink text-white font-bold text-sm border-2 border-bingoDark shadow-[2px_2px_0px_#141414]">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL 3: SHARE WITH GROUP MODAL                           -->
+    <!-- ========================================================= -->
+    <div id="share-modal" class="fixed inset-0 bg-black/65 backdrop-blur-sm z-50 hidden items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90dvh] overflow-y-auto scroll-touch p-5 shadow-2xl border-4 border-bingoDark">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-poster text-xl text-bingoDark tracking-wide uppercase">Share Photo Bingo</h3>
+                <button type="button" onclick="closeShareModal()" class="p-2 rounded-full bg-stone-100 hover:bg-stone-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p class="text-xs text-stone-600 mb-4">
+                Email your stamped results & keepsake poster, copy a group chat scorecard, or share a live invite link for London!
+            </p>
+
+            <div class="space-y-2.5">
+                <button type="button" onclick="closeShareModal(); openEmailModal();" class="w-full py-3 px-4 rounded-xl bg-amber-300 hover:bg-amber-400 text-bingoDark font-extrabold text-sm flex items-center justify-center gap-2 border-2 border-bingoDark shadow-[2px_2px_0px_#141414]">
+                    <i data-lucide="mail" class="w-4 h-4 text-bingoHotPink"></i>
+                    <span>Email All Results & Poster</span>
+                </button>
+
+                <button type="button" onclick="copyEmojiScorecard()" class="w-full py-3 px-4 rounded-xl bg-bingoHotPink hover:bg-pink-600 text-white font-bold text-sm flex items-center justify-center gap-2 border-2 border-bingoDark shadow-[2px_2px_0px_#141414]">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                    <span>Copy WhatsApp / iMessage Scorecard</span>
+                </button>
+
+                <button type="button" onclick="copyInviteUrl()" class="w-full py-3 px-4 rounded-xl bg-paperCream hover:bg-stone-100 text-bingoDark font-bold text-sm flex items-center justify-center gap-2 border-2 border-bingoDark">
+                    <i data-lucide="link" class="w-4 h-4 text-bingoHotPink"></i>
+                    <span>Copy Group Invite Link</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/65 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border-4 border-bingoDark">
+            <h3 id="confirm-modal-title" class="font-poster text-xl text-bingoDark mb-2">Shuffle New Card?</h3>
+            <p id="confirm-modal-desc" class="text-sm text-stone-600 mb-5">
+                This will randomize the 25 challenges across the card and reset stamps so a friend can start a fresh card in London.
+            </p>
+            <div class="flex gap-2.5">
+                <button type="button" onclick="closeConfirmModal()" class="flex-1 py-2.5 rounded-xl border-2 border-stone-300 font-bold text-sm text-stone-700">
+                    Cancel
+                </button>
+                <button type="button" id="confirm-modal-ok" class="flex-1 py-2.5 rounded-xl bg-bingoHotPink text-white font-bold text-sm border-2 border-bingoDark shadow-[2px_2px_0px_#141414]">
+                    Shuffle Card
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL 4: EMAIL RESULTS & COMPLETED POSTER                 -->
+    <!-- ========================================================= -->
+    <div id="email-modal" class="fixed inset-0 bg-black/65 backdrop-blur-sm z-50 hidden items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[92dvh] flex flex-col shadow-2xl border-4 border-bingoDark">
+            <div class="p-4 sm:p-5 pb-3 border-b-2 border-bingoDark flex items-center justify-between bg-bingoPink rounded-t-2xl shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-bingoDark text-amber-300 flex items-center justify-center shadow-sm">
+                        <i data-lucide="mail" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-poster text-xl text-bingoDark tracking-wide uppercase leading-none">Email Bingo Results</h3>
+                        <p class="text-xs font-bold text-bingoDark/80 mt-0.5">Send your scorecard & keepsake photo poster</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeEmailModal()" class="p-2 rounded-full bg-white/80 hover:bg-white text-bingoDark">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-4 sm:p-5 overflow-y-auto scroll-touch flex-1 space-y-4">
+                <div class="bg-paperCream border-2 border-bingoDark rounded-2xl p-3 flex items-center gap-3.5">
+                    <div class="w-16 h-24 sm:w-20 sm:h-28 rounded-lg border-2 border-bingoDark bg-white overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
+                        <img id="email-poster-thumb" src="" alt="Completed Poster Preview" class="w-full h-full object-cover hidden" />
+                        <span id="email-poster-thumb-loading" class="text-[10px] font-bold text-stone-400 text-center px-1">Rendering poster...</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                            <span id="email-score-badge" class="bg-bingoHotPink text-white font-slab text-xs px-2.5 py-0.5 rounded-full border border-bingoDark">0 / 25 Stamped</span>
+                            <span id="email-lines-badge" class="bg-amber-300 text-bingoDark font-bold text-xs px-2.5 py-0.5 rounded-full border border-bingoDark">0 Lines</span>
+                        </div>
+                        <p class="font-bold text-sm text-bingoDark leading-snug" id="email-preview-headline">Ready to send your London Photo Bingo results!</p>
+                        <p class="text-xs text-stone-500 mt-0.5" id="email-photos-count">25 photos in your keepsake poster.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="email-player-name" class="block text-xs font-bold text-stone-700 mb-1">Your Name / Team (Optional)</label>
+                        <input type="text" id="email-player-name" oninput="onEmailFieldsChanged()" placeholder="e.g. Sarah & Chloe" class="w-full px-3 py-2.5 rounded-xl border-2 border-stone-300 focus:border-bingoHotPink focus:outline-none text-sm font-bold" />
+                    </div>
+                    <div>
+                        <label for="email-recipient-input" class="block text-xs font-bold text-stone-700 mb-1">Recipient Email Address</label>
+                        <input type="email" id="email-recipient-input" oninput="onEmailFieldsChanged()" placeholder="jnicoll83@googlemail.com" class="w-full px-3 py-2.5 rounded-xl border-2 border-stone-300 focus:border-bingoHotPink focus:outline-none text-sm font-bold" />
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-bold text-stone-600">Email Body Checklist Preview</span>
+                        <span class="text-[11px] font-semibold text-bingoHotPink">Includes all 25 tasks</span>
+                    </div>
+                    <pre id="email-body-preview" class="bg-stone-50 border-2 border-stone-200 rounded-xl p-2.5 text-[11px] font-mono text-stone-700 max-h-32 overflow-y-auto scroll-touch whitespace-pre-wrap leading-relaxed"></pre>
+                </div>
+
+                <div class="space-y-2.5 pt-1">
+                    <button type="button" id="email-native-share-btn" onclick="sharePosterAndResultsNative()" class="w-full py-3 px-4 rounded-xl bg-bingoHotPink hover:bg-pink-600 text-white font-extrabold text-sm flex items-center justify-center gap-2 border-2 border-bingoDark shadow-[3px_3px_0px_#141414] active:translate-y-0.5 transition">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        <span>Share Poster Image + Results (Mail / Apps)</span>
+                    </button>
+
+                    <button type="button" onclick="openMailtoAndDownloadPoster()" class="w-full py-3 px-4 rounded-xl bg-londonNavy hover:bg-blue-950 text-white font-bold text-sm flex items-center justify-center gap-2 border-2 border-bingoDark shadow-[3px_3px_0px_#141414] active:translate-y-0.5 transition">
+                        <i data-lucide="mail-check" class="w-4 h-4 text-amber-300"></i>
+                        <span>Open Email App + Download Poster PNG</span>
+                    </button>
+
+                    <button type="button" onclick="copyEmailSummaryAndDownload()" class="w-full py-2.5 px-4 rounded-xl bg-paperCream hover:bg-stone-100 text-bingoDark font-bold text-xs sm:text-sm flex items-center justify-center gap-2 border-2 border-bingoDark transition">
+                        <i data-lucide="clipboard-copy" class="w-4 h-4 text-bingoHotPink"></i>
+                        <span>Copy Full Email Text & Download Poster PNG</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Toast Notification -->
+    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-bingoDark text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl border border-bingoPink opacity-0 pointer-events-none transition-opacity duration-200">
+        Saved!
+    </div>
+
+    <script>
+        // ==========================================================
+        // 1. EXACT 25 CHALLENGES FROM SAMANTHA'S 40TH BIRTHDAY POSTER
+        // ==========================================================
+        const SAMANTHA_DEFAULT_TASKS = [
+            "Take a selfie with a red phone box",
+            "Get a stranger to cheers with you",
+            "Photo with a street performer",
+            "Photo with a police officer",
+            "Convince a stranger to do a birthday message on video",
+            "Take a dramatic Titanic-style photo",
+            "Find someone wearing an Arsenal, Chelsea, Spurs or West Ham shirt",
+            "Take a photo looking disappointed with the London Eye in the background",
+            "Get photobombed by three strangers in one picture",
+            "Take an artful tragic \"I've lost everything\" photo on a park bench",
+            "Start a round of applause and walk away",
+            "Take a paparazzi-style photo of the birthday person exiting a pub",
+            "Find a random object and make it the focus of a professional photoshoot",
+            "Do an MTV Cribs tour of a public toilet",
+            "Photo on yourself on the horse of a carousel!",
+            "High five as many people as you can on the escalator (my record is 17)",
+            "Pose next to a statue and copy it exactly",
+            "Capture a dramatic confrontation with a pigeon.",
+            "Get down on one knee and propose to an inanimate object.",
+            "Point dramatically at absolutely nothing while the rest of the group looks shocked.",
+            "Stand next to the most expensive car you can find and pretend it's yours.",
+            "Get strangers to join a \"band photo\".",
+            "Look starstruck next to a random stranger.",
+            "Narrate the behaviour in the voice of David Attenborough of someone ordering drinks.",
+            "Recreate the same group photo at the start and end of the day."
+        ];
+
+        const DEFAULT_EVENT_META = {
+            title1: "SAMANTHA'S",
+            title2: "40TH BIRTHDAY",
+            title3: "PHOTO BINGO",
+            noteTL: "Same City\nBigger Stories ♥",
+            noteTR: "40 Looks\nGood On You! ♥",
+            noteBL: "Iconic Places\nRidiculous Challenges\nUnforgettable Memories ♥",
+            footerRibbon: "LONDON CALLING\n(AND SO ARE WE!)",
+            noteBR: "Adventure\nFriendship\nForty & Fabulous ♥",
+            defaultEmail: "jnicoll83@googlemail.com"
+        };
+
+        const STORAGE_KEY = 'samantha_40th_london_bingo_v2';
+
+        // ==========================================================
+        // 2. PROCEDURAL ILLUSTRATED CARD SCENES (1 TO 25)
+        // ==========================================================
+        const scenePhotoCache = {};
+
+        function drawMiniPerson(ctx, x, y, scale, options = {}) {
+            const {
+                shirtColor = '#141414',
+                hairColor = '#f3d27a',
+                shortHair = true,
+                sunglasses = false,
+                sad = false,
+                surprised = false,
+                armsUp = false,
+                pointing = false,
+                cheersGlass = false,
+                signText = null
+            } = options;
+
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(scale, scale);
+
+            ctx.fillStyle = shirtColor;
+            ctx.beginPath();
+            ctx.ellipse(0, 42, 26, 22, 0, Math.PI, 0);
+            ctx.fill();
+            ctx.strokeStyle = '#141414';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            ctx.strokeStyle = '#f2c6a0';
+            ctx.lineWidth = 7;
+            ctx.lineCap = 'round';
+            if (armsUp) {
+                ctx.beginPath();
+                ctx.moveTo(-20, 32);
+                ctx.lineTo(-42, 6);
+                ctx.moveTo(20, 32);
+                ctx.lineTo(42, 6);
+                ctx.stroke();
+            } else if (pointing) {
+                ctx.beginPath();
+                ctx.moveTo(-18, 34);
+                ctx.lineTo(-34, 46);
+                ctx.moveTo(18, 34);
+                ctx.lineTo(44, 24);
+                ctx.stroke();
+            } else {
+                ctx.beginPath();
+                ctx.moveTo(-20, 34);
+                ctx.lineTo(-30, 52);
+                ctx.moveTo(20, 34);
+                ctx.lineTo(30, 52);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#f4cca8';
+            ctx.beginPath();
+            ctx.arc(0, 8, 18, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#141414';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            ctx.fillStyle = hairColor;
+            if (shortHair) {
+                ctx.beginPath();
+                ctx.arc(0, 3, 19, Math.PI * 0.95, Math.PI * 2.08);
+                ctx.lineTo(15, -2);
+                ctx.lineTo(-15, -2);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            } else {
+                ctx.beginPath();
+                ctx.arc(0, 4, 20, Math.PI * 0.85, Math.PI * 2.15);
+                ctx.lineTo(22, 24);
+                ctx.lineTo(-22, 24);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            if (sunglasses) {
+                ctx.fillStyle = '#141414';
+                ctx.fillRect(-13, 4, 10, 7);
+                ctx.fillRect(3, 4, 10, 7);
+                ctx.strokeStyle = '#141414';
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(-3, 7); ctx.lineTo(3, 7); ctx.stroke();
+            } else {
+                ctx.fillStyle = '#141414';
+                ctx.beginPath();
+                ctx.arc(-6, 7, 2.2, 0, Math.PI * 2);
+                ctx.arc(6, 7, 2.2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.strokeStyle = '#141414';
+            ctx.lineWidth = 2.2;
+            if (sad) {
+                ctx.beginPath();
+                ctx.arc(0, 17, 5, Math.PI * 1.15, Math.PI * 1.85);
+                ctx.stroke();
+            } else if (surprised) {
+                ctx.fillStyle = '#e11d6b';
+                ctx.beginPath();
+                ctx.ellipse(0, 15, 4, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            } else {
+                ctx.beginPath();
+                ctx.arc(0, 12, 6, 0.15 * Math.PI, 0.85 * Math.PI);
+                ctx.stroke();
+            }
+
+            if (cheersGlass) {
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(28, 16, 12, 18);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(28, 16, 12, 18);
+            }
+
+            if (signText) {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(-26, 28, 52, 24);
+                ctx.strokeStyle = '#e61e6e';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(-26, 28, 52, 24);
+                ctx.fillStyle = '#e61e6e';
+                ctx.font = 'bold 8px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(signText, 0, 42);
+            }
+
+            ctx.restore();
+        }
+
+        function createCardScenePhoto(taskNum) {
+            if (scenePhotoCache[taskNum]) {
+                return scenePhotoCache[taskNum];
+            }
+
+            const W = 280;
+            const H = 210;
+            const c = document.createElement('canvas');
+            c.width = W;
+            c.height = H;
+            const ctx = c.getContext('2d');
+
+            const sky = ctx.createLinearGradient(0, 0, 0, H);
+            sky.addColorStop(0, '#dbeafe');
+            sky.addColorStop(1, '#f8fafc');
+            ctx.fillStyle = sky;
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(0, H - 42, W, 42);
+
+            switch (taskNum) {
+                case 1:
+                    ctx.fillStyle = '#C8102E';
+                    ctx.fillRect(128, 22, 108, 165);
+                    ctx.strokeStyle = '#141414';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(128, 22, 108, 165);
+                    ctx.fillStyle = '#fef2f2';
+                    ctx.fillRect(138, 46, 88, 132);
+                    ctx.fillStyle = '#141414';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('TELEPHONE', 182, 38);
+                    drawMiniPerson(ctx, 84, 110, 1.35, { shirtColor: '#141414', hairColor: '#f5d57a' });
+                    break;
+                case 2:
+                    ctx.fillStyle = '#fef3c7';
+                    ctx.fillRect(0, 0, W, H - 40);
+                    drawMiniPerson(ctx, 82, 112, 1.25, { shirtColor: '#141414', cheersGlass: true });
+                    drawMiniPerson(ctx, 196, 112, 1.25, { shirtColor: '#334155', hairColor: '#475569', shortHair: false, sunglasses: true });
+                    break;
+                case 3:
+                    ctx.fillStyle = '#fde68a';
+                    ctx.fillRect(0, 0, W, H - 40);
+                    drawMiniPerson(ctx, 88, 110, 1.3, { shirtColor: '#ca8a04', hairColor: '#eab308', pointing: true });
+                    drawMiniPerson(ctx, 186, 112, 1.25, { shirtColor: '#141414', hairColor: '#f5d57a' });
+                    break;
+                case 4:
+                    ctx.fillStyle = '#e0f2fe';
+                    ctx.fillRect(0, 0, W, H - 40);
+                    drawMiniPerson(ctx, 88, 114, 1.25, { shirtColor: '#141414' });
+                    drawMiniPerson(ctx, 188, 112, 1.3, { shirtColor: '#1e293b', hairColor: '#1e293b' });
+                    ctx.fillStyle = '#0f172a';
+                    ctx.beginPath(); ctx.arc(188, 96, 20, Math.PI, 0); ctx.fill();
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.beginPath(); ctx.arc(188, 82, 4, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case 5:
+                    drawMiniPerson(ctx, 86, 104, 1.2, { shirtColor: '#141414' });
+                    drawMiniPerson(ctx, 192, 104, 1.2, { shirtColor: '#2563eb', hairColor: '#334155', shortHair: false, signText: '40th BDAY!' });
+                    break;
+                case 6:
+                    ctx.fillStyle = '#bae6fd';
+                    ctx.fillRect(0, 115, W, 55);
+                    ctx.strokeStyle = '#475569';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath(); ctx.moveTo(0, 148); ctx.lineTo(W, 148); ctx.stroke();
+                    drawMiniPerson(ctx, 140, 96, 1.35, { shirtColor: '#141414', armsUp: true });
+                    break;
+                case 7:
+                    drawMiniPerson(ctx, 78, 114, 1.2, { shirtColor: '#141414', pointing: true });
+                    ctx.fillStyle = '#dc2626';
+                    ctx.fillRect(142, 108, 76, 70);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 13px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('LONDON FC', 180, 142);
+                    drawMiniPerson(ctx, 180, 92, 1.1, { shirtColor: '#dc2626', hairColor: '#3f2e21' });
+                    break;
+                case 8:
+                    ctx.strokeStyle = '#64748b';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath(); ctx.arc(205, 86, 48, 0, Math.PI * 2); ctx.stroke();
+                    drawMiniPerson(ctx, 96, 116, 1.3, { shirtColor: '#141414', sad: true });
+                    break;
+                case 9:
+                    drawMiniPerson(ctx, 52, 118, 1.05, { shirtColor: '#3b82f6', hairColor: '#1e293b', shortHair: false, surprised: true });
+                    drawMiniPerson(ctx, 116, 106, 1.15, { shirtColor: '#10b981', hairColor: '#1e293b', shortHair: false });
+                    drawMiniPerson(ctx, 140, 128, 1.15, { shirtColor: '#141414', sunglasses: true });
+                    drawMiniPerson(ctx, 218, 118, 1.05, { shirtColor: '#f59e0b', hairColor: '#451a03', shortHair: false, surprised: true });
+                    break;
+                case 10:
+                    ctx.fillStyle = '#86efac';
+                    ctx.fillRect(0, 145, W, 65);
+                    ctx.fillStyle = '#78350f';
+                    ctx.fillRect(45, 134, 190, 12);
+                    ctx.fillRect(58, 146, 10, 26);
+                    ctx.fillRect(212, 146, 10, 26);
+                    drawMiniPerson(ctx, 140, 96, 1.25, { shirtColor: '#141414', sad: true });
+                    break;
+                case 11:
+                    drawMiniPerson(ctx, 165, 108, 1.3, { shirtColor: '#141414' });
+                    ctx.fillStyle = '#f4cca8';
+                    ctx.beginPath();
+                    ctx.arc(62, 126, 12, 0, Math.PI * 2);
+                    ctx.arc(84, 114, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#e61e6e';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.fillText('👏 CLAP!', 68, 86);
+                    break;
+                case 12:
+                    ctx.fillStyle = '#292524';
+                    ctx.fillRect(130, 24, 125, 145);
+                    ctx.fillStyle = '#fef08a';
+                    ctx.fillRect(142, 36, 101, 24);
+                    ctx.fillStyle = '#141414';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('THE CROWN', 192, 52);
+                    drawMiniPerson(ctx, 92, 114, 1.3, { shirtColor: '#141414', sunglasses: true });
+                    break;
+                case 13:
+                    drawMiniPerson(ctx, 95, 112, 1.25, { shirtColor: '#141414' });
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillRect(116, 124, 24, 16);
+                    ctx.fillStyle = '#facc15';
+                    ctx.beginPath(); ctx.arc(198, 146, 16, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(210, 134, 10, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case 14:
+                    ctx.fillStyle = '#f1f5f9';
+                    ctx.fillRect(22, 22, 112, 148);
+                    ctx.strokeStyle = '#141414';
+                    ctx.lineWidth = 2.5;
+                    ctx.strokeRect(22, 22, 112, 148);
+                    ctx.fillStyle = '#e61e6e';
+                    ctx.font = 'bold 15px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('MTV CRIBS', 78, 54);
+                    drawMiniPerson(ctx, 196, 114, 1.25, { shirtColor: '#141414', pointing: true });
+                    break;
+                case 15:
+                    ctx.fillStyle = '#fce7f3';
+                    ctx.fillRect(0, 0, W, H - 40);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath(); ctx.ellipse(165, 136, 36, 20, -0.15, 0, Math.PI * 2); ctx.fill();
+                    ctx.strokeStyle = '#141414';
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+                    drawMiniPerson(ctx, 145, 92, 1.25, { shirtColor: '#141414', armsUp: true });
+                    break;
+                case 16:
+                    ctx.strokeStyle = '#475569';
+                    ctx.lineWidth = 5;
+                    ctx.beginPath(); ctx.moveTo(20, 168); ctx.lineTo(260, 48); ctx.stroke();
+                    drawMiniPerson(ctx, 135, 102, 1.25, { shirtColor: '#141414', sunglasses: true, armsUp: true });
+                    break;
+                case 17:
+                    ctx.fillStyle = '#cbd5e1';
+                    ctx.fillRect(36, 48, 86, 122);
+                    drawMiniPerson(ctx, 79, 104, 1.15, { shirtColor: '#64748b', hairColor: '#475569', sad: true });
+                    drawMiniPerson(ctx, 192, 106, 1.25, { shirtColor: '#141414', sad: true });
+                    break;
+                case 18:
+                    drawMiniPerson(ctx, 84, 118, 1.25, { shirtColor: '#141414', pointing: true });
+                    ctx.fillStyle = '#64748b';
+                    ctx.beginPath(); ctx.ellipse(196, 118, 22, 15, -0.3, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(214, 104, 10, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.beginPath(); ctx.moveTo(223, 104); ctx.lineTo(234, 107); ctx.lineTo(223, 110); ctx.fill();
+                    break;
+                case 19:
+                    drawMiniPerson(ctx, 92, 114, 1.25, { shirtColor: '#141414' });
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillRect(178, 92, 26, 78);
+                    ctx.beginPath(); ctx.arc(191, 92, 13, Math.PI, 0); ctx.fill();
+                    ctx.fillStyle = '#e61e6e';
+                    ctx.font = 'bold 16px sans-serif';
+                    ctx.fillText('♥', 191, 68);
+                    break;
+                case 20:
+                    drawMiniPerson(ctx, 62, 122, 1.0, { shirtColor: '#334155', hairColor: '#1e293b', surprised: true });
+                    drawMiniPerson(ctx, 218, 122, 1.0, { shirtColor: '#334155', hairColor: '#1e293b', surprised: true });
+                    drawMiniPerson(ctx, 140, 106, 1.3, { shirtColor: '#141414', pointing: true });
+                    break;
+                case 21:
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillRect(36, 106, 130, 56);
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.fillRect(54, 118, 94, 18);
+                    drawMiniPerson(ctx, 206, 112, 1.25, { shirtColor: '#141414', sunglasses: true });
+                    break;
+                case 22:
+                    drawMiniPerson(ctx, 64, 116, 1.15, { shirtColor: '#1e293b', hairColor: '#1e293b', sunglasses: true });
+                    drawMiniPerson(ctx, 140, 110, 1.25, { shirtColor: '#141414', armsUp: true });
+                    drawMiniPerson(ctx, 216, 116, 1.15, { shirtColor: '#334155', hairColor: '#475569', shortHair: false });
+                    break;
+                case 23:
+                    drawMiniPerson(ctx, 96, 114, 1.25, { shirtColor: '#141414', surprised: true });
+                    drawMiniPerson(ctx, 188, 112, 1.3, { shirtColor: '#1e293b', hairColor: '#1e293b', shortHair: false, sunglasses: true });
+                    break;
+                case 24:
+                    drawMiniPerson(ctx, 84, 114, 1.25, { shirtColor: '#141414', cheersGlass: true });
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(136, 36, 126, 56);
+                    ctx.strokeStyle = '#141414';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(136, 36, 126, 56);
+                    ctx.fillStyle = '#141414';
+                    ctx.font = 'italic bold 10px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('"Here we see the', 199, 56);
+                    ctx.fillText('adult human..."', 199, 72);
+                    break;
+                case 25:
+                default:
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(24, 42, 104, 124);
+                    ctx.strokeStyle = '#141414';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(24, 42, 104, 124);
+                    drawMiniPerson(ctx, 76, 98, 1.0, { shirtColor: '#141414' });
+                    ctx.fillStyle = '#141414';
+                    ctx.font = 'bold 11px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('START', 76, 158);
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(152, 42, 104, 124);
+                    ctx.strokeRect(152, 42, 104, 124);
+                    drawMiniPerson(ctx, 204, 98, 1.0, { shirtColor: '#e61e6e', sunglasses: true });
+                    ctx.fillText('END', 204, 158);
+                    break;
+            }
+
+            const dataUrl = c.toDataURL('image/jpeg', 0.85);
+            scenePhotoCache[taskNum] = dataUrl;
+            return dataUrl;
+        }
+
+        // ==========================================================
+        // 3. STATE MANAGEMENT
+        // ==========================================================
+        let appState = {
+            meta: { ...DEFAULT_EVENT_META },
+            tiles: [],
+            celebratedLines: 0,
+            playerName: "",
+            recipientEmail: "jnicoll83@googlemail.com"
+        };
+
+        let activeTileIndex = null;
+        let cachedPosterDataUrl = null;
+
+        function createFreshTiles(taskTexts = SAMANTHA_DEFAULT_TASKS) {
+            return taskTexts.map((text, idx) => {
+                const num = idx + 1;
+                return {
+                    num: num,
+                    text: text,
+                    completed: false,
+                    photoDataUrl: createCardScenePhoto(num),
+                    isCustomPhoto: false
+                };
+            });
+        }
+
+        function loadFromStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && Array.isArray(parsed.tiles) && parsed.tiles.length === 25) {
+                        appState.meta = { ...DEFAULT_EVENT_META, ...(parsed.meta || {}) };
+                        appState.tiles = parsed.tiles.map((t, idx) => ({
+                            num: t.num || (idx + 1),
+                            text: t.text || SAMANTHA_DEFAULT_TASKS[idx],
+                            completed: Boolean(t.completed),
+                            photoDataUrl: t.photoDataUrl || createCardScenePhoto(t.num || (idx + 1)),
+                            isCustomPhoto: Boolean(t.isCustomPhoto)
+                        }));
+                        appState.celebratedLines = parsed.celebratedLines || 0;
+                        appState.playerName = parsed.playerName || "";
+                        appState.recipientEmail = parsed.recipientEmail || appState.meta.defaultEmail || "jnicoll83@googlemail.com";
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('Storage read error:', e);
+            }
+            appState.tiles = createFreshTiles();
+            appState.recipientEmail = appState.meta.defaultEmail || "jnicoll83@googlemail.com";
+        }
+
+        function saveToStorage() {
+            cachedPosterDataUrl = null;
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                showToast('Storage full — consider saving your Poster PNG!');
+            }
+        }
+
+        function checkSharedUrlHash() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const queryEmail = params.get('email');
+                const hash = window.location.hash;
+
+                if (hash && hash.startsWith('#event=')) {
+                    const rawJson = decodeURIComponent(atob(hash.replace('#event=', '')));
+                    const shared = JSON.parse(rawJson);
+                    if (shared.meta) {
+                        appState.meta = { ...DEFAULT_EVENT_META, ...shared.meta };
+                    }
+                    if (shared.defaultEmail) {
+                        appState.meta.defaultEmail = shared.defaultEmail;
+                    }
+                    if (appState.meta.defaultEmail) {
+                        appState.recipientEmail = appState.meta.defaultEmail;
+                    }
+                    if (Array.isArray(shared.tasks) && shared.tasks.length === 25) {
+                        appState.tiles = createFreshTiles(shared.tasks);
+                    }
+                    saveToStorage();
+                    history.replaceState(null, '', window.location.pathname + window.location.search);
+                    setTimeout(() => showToast('Loaded shared London Bingo card!'), 400);
+                } else if (queryEmail) {
+                    appState.meta.defaultEmail = queryEmail;
+                    appState.recipientEmail = queryEmail;
+                    saveToStorage();
+                }
+            } catch (err) {
+                console.warn('Could not parse shared URL:', err);
+            }
+        }
+
+        // ==========================================================
+        // 4. RENDER POSTER HEADER, GRID & PROGRESS
+        // ==========================================================
+        function renderPosterHeader() {
+            document.getElementById('poster-title-1').textContent = appState.meta.title1;
+            document.getElementById('poster-title-2').textContent = appState.meta.title2;
+            document.getElementById('poster-title-3').textContent = appState.meta.title3;
+            document.getElementById('poster-note-tl').textContent = appState.meta.noteTL;
+            document.getElementById('poster-note-tr').textContent = appState.meta.noteTR;
+            document.getElementById('poster-note-bl').textContent = appState.meta.noteBL;
+            document.getElementById('poster-footer-ribbon').textContent = appState.meta.footerRibbon;
+            document.getElementById('poster-note-br').textContent = appState.meta.noteBR;
+        }
+
+        function renderGrid() {
+            const gridEl = document.getElementById('bingo-grid');
+            gridEl.innerHTML = '';
+
+            const winningIndices = getWinningTileIndices();
+
+            appState.tiles.forEach((tile, idx) => {
+                const isLastCol = (idx % 5) === 4;
+                const isLastRow = idx >= 20;
+                const isWinningTile = winningIndices.has(idx);
+
+                const cell = document.createElement('div');
+                cell.className = [
+                    'bingo-cell relative flex flex-col justify-between text-center bg-white p-1 sm:p-2 select-none',
+                    !isLastCol ? 'border-r-[2px] border-bingoDark' : '',
+                    !isLastRow ? 'border-b-[2px] border-bingoDark' : '',
+                    isWinningTile ? 'bg-pink-50/70' : ''
+                ].join(' ');
+
+                const caption = document.createElement('button');
+                caption.type = 'button';
+                caption.onclick = () => openTileModal(idx);
+                caption.className = 'text-[9.5px] sm:text-[12px] leading-[1.18] font-bold text-bingoDark px-0.5 mb-1 sm:mb-1.5 min-h-[2.4em] sm:min-h-[2.6em] flex items-center justify-center w-full cursor-pointer hover:text-bingoHotPink';
+                caption.textContent = `${tile.num}. ${tile.text}`;
+
+                const photoButton = document.createElement('button');
+                photoButton.type = 'button';
+                photoButton.onclick = () => openTileModal(idx);
+                photoButton.className = [
+                    'relative w-full aspect-[4/3.5] rounded-[3px] overflow-hidden flex items-center justify-center transition-all cursor-pointer',
+                    tile.completed
+                        ? 'border-2 border-bingoHotPink shadow-sm'
+                        : 'border border-bingoDark/80 hover:border-bingoHotPink'
+                ].join(' ');
+
+                if (tile.photoDataUrl) {
+                    const img = document.createElement('img');
+                    img.src = tile.photoDataUrl;
+                    img.alt = tile.text;
+                    img.className = 'w-full h-full object-cover';
+                    photoButton.appendChild(img);
+
+                    if (tile.completed) {
+                        const badge = document.createElement('div');
+                        badge.className = 'absolute bottom-1 right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-bingoHotPink text-white flex items-center justify-center shadow border border-white';
+                        badge.innerHTML = `<svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                        photoButton.appendChild(badge);
+                    }
+                } else {
+                    photoButton.className = 'relative w-full aspect-[4/3.5] rounded-[3px] overflow-hidden flex flex-col items-center justify-center bg-[#f8f6f2] border border-dashed border-stone-300 text-stone-400 cursor-pointer';
+                    photoButton.innerHTML = `
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 opacity-75" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
+                        <span class="text-[8px] sm:text-[10px] font-semibold mt-0.5">+ Photo</span>
+                    `;
+                }
+
+                const actionsRow = document.createElement('div');
+                actionsRow.className = 'grid grid-cols-2 gap-1 mt-1';
+
+                const camBtn = document.createElement('button');
+                camBtn.type = 'button';
+                camBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    activeTileIndex = idx;
+                    triggerPhotoPicker();
+                };
+                camBtn.className = 'py-1 px-1 rounded bg-stone-100 hover:bg-pink-100 text-bingoDark text-[8.5px] sm:text-[10px] font-bold flex items-center justify-center gap-0.5 border border-stone-300';
+                camBtn.innerHTML = `<span>📷</span><span class="truncate">Camera</span>`;
+
+                const stampBtn = document.createElement('button');
+                stampBtn.type = 'button';
+                stampBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    appState.tiles[idx].completed = !appState.tiles[idx].completed;
+                    saveToStorage();
+                    renderGrid();
+                };
+                stampBtn.className = tile.completed
+                    ? 'py-1 px-1 rounded bg-bingoHotPink text-white text-[8.5px] sm:text-[10px] font-extrabold flex items-center justify-center gap-0.5 border border-bingoDark'
+                    : 'py-1 px-1 rounded bg-white hover:bg-pink-50 text-bingoHotPink text-[8.5px] sm:text-[10px] font-bold flex items-center justify-center gap-0.5 border border-bingoPink';
+                stampBtn.innerHTML = tile.completed ? `<span>✓</span><span>Done</span>` : `<span>♥</span><span>Stamp</span>`;
+
+                actionsRow.appendChild(camBtn);
+                actionsRow.appendChild(stampBtn);
+
+                cell.appendChild(caption);
+                cell.appendChild(photoButton);
+                cell.appendChild(actionsRow);
+                gridEl.appendChild(cell);
+            });
+
+            updateProgressAndBingoStatus();
+        }
+
+        // ==========================================================
+        // 5. BINGO LINE DETECTION & CELEBRATION
+        // ==========================================================
+        function evaluateLines() {
+            const lines = [];
+            for (let r = 0; r < 5; r++) {
+                const rowIdx = [0, 1, 2, 3, 4].map(c => r * 5 + c);
+                if (rowIdx.every(i => appState.tiles[i].completed)) lines.push(rowIdx);
+            }
+            for (let c = 0; c < 5; c++) {
+                const colIdx = [0, 1, 2, 3, 4].map(r => r * 5 + c);
+                if (colIdx.every(i => appState.tiles[i].completed)) lines.push(colIdx);
+            }
+            const diag1 = [0, 6, 12, 18, 24];
+            const diag2 = [4, 8, 12, 16, 20];
+            if (diag1.every(i => appState.tiles[i].completed)) lines.push(diag1);
+            if (diag2.every(i => appState.tiles[i].completed)) lines.push(diag2);
+
+            const isFullHouse = appState.tiles.every(t => t.completed);
+            return { lines: lines.length, winningLines: lines, isFullHouse };
+        }
+
+        function getWinningTileIndices() {
+            const { winningLines } = evaluateLines();
+            const set = new Set();
+            winningLines.forEach(line => line.forEach(idx => set.add(idx)));
+            return set;
+        }
+
+        function updateProgressAndBingoStatus() {
+            const completedCount = appState.tiles.filter(t => t.completed).length;
+            const pct = Math.round((completedCount / 25) * 100);
+
+            document.getElementById('progress-label').textContent = `${completedCount} / 25 Stamped`;
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+
+            const { lines, isFullHouse } = evaluateLines();
+            const linesBadge = document.getElementById('lines-badge');
+            const banner = document.getElementById('bingo-banner');
+
+            if (lines > 0) {
+                linesBadge.classList.remove('hidden');
+                linesBadge.textContent = isFullHouse ? 'FULL HOUSE!' : `${lines} ${lines === 1 ? 'Line' : 'Lines'}`;
+                banner.classList.remove('hidden');
+
+                document.getElementById('bingo-banner-title').textContent = isFullHouse
+                    ? 'FULL HOUSE — ALL 25 STAMPED!'
+                    : `${lines}x BINGO LINE ACHIEVED!`;
+
+                if (lines > appState.celebratedLines) {
+                    appState.celebratedLines = lines;
+                    saveToStorage();
+                    triggerCelebrationConfetti();
+                }
+            } else {
+                linesBadge.classList.add('hidden');
+                banner.classList.add('hidden');
+                appState.celebratedLines = 0;
+            }
+        }
+
+        function triggerCelebrationConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 95,
+                    spread: 75,
+                    origin: { y: 0.6 },
+                    colors: ['#F45D96', '#E61E6E', '#C8102E', '#1B2A4A', '#FBBF24']
+                });
+            }
+        }
+
+        // ==========================================================
+        // 6. TILE MODAL & CLIENT-SIDE PHOTO COMPRESSION
+        // ==========================================================
+        function openTileModal(idx) {
+            activeTileIndex = idx;
+            const tile = appState.tiles[idx];
+            const colLetters = ['B', 'I', 'N', 'G', 'O'];
+            const letter = colLetters[idx % 5];
+
+            document.getElementById('modal-tile-badge').textContent = `${letter} • #${tile.num}`;
+            document.getElementById('modal-tile-title').textContent = tile.text;
+
+            const imgEl = document.getElementById('modal-photo-img');
+            const placeholderEl = document.getElementById('modal-photo-placeholder');
+            const uploadBtnText = document.getElementById('modal-upload-btn-text');
+            const checkBtnText = document.getElementById('modal-check-btn-text');
+
+            if (tile.photoDataUrl) {
+                imgEl.src = tile.photoDataUrl;
+                imgEl.classList.remove('hidden');
+                placeholderEl.classList.add('hidden');
+                uploadBtnText.textContent = 'Replace / Camera Photo';
+            } else {
+                imgEl.src = '';
+                imgEl.classList.add('hidden');
+                placeholderEl.classList.remove('hidden');
+                uploadBtnText.textContent = 'Take / Upload Photo Proof';
+            }
+
+            checkBtnText.textContent = tile.completed ? 'Unstamp Done' : 'Toggle Done / Stamp';
+
+            document.body.classList.add('overflow-hidden');
+            const modal = document.getElementById('tile-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeTileModal() {
+            const modal = document.getElementById('tile-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+            activeTileIndex = null;
+        }
+
+        function triggerPhotoPicker() {
+            const input = document.getElementById('photo-file-input');
+            input.value = '';
+            input.click();
+        }
+
+        function handlePhotoSelected(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file || activeTileIndex === null) return;
+
+            const idx = activeTileIndex;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    const maxDim = 520;
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > h && w > maxDim) {
+                        h = Math.round((h * maxDim) / w);
+                        w = maxDim;
+                    } else if (h >= w && h > maxDim) {
+                        w = Math.round((w * maxDim) / h);
+                        h = maxDim;
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                    appState.tiles[idx].photoDataUrl = compressedDataUrl;
+                    appState.tiles[idx].isCustomPhoto = true;
+                    appState.tiles[idx].completed = true;
+
+                    saveToStorage();
+                    renderGrid();
+                    if (!document.getElementById('tile-modal').classList.contains('hidden')) {
+                        openTileModal(idx);
+                    }
+                    showToast('Photo stamped onto Bingo card!');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function toggleTileCheckOnly() {
+            if (activeTileIndex === null) return;
+            const tile = appState.tiles[activeTileIndex];
+            tile.completed = !tile.completed;
+            saveToStorage();
+            renderGrid();
+            closeTileModal();
+        }
+
+        function resetSingleTileScene() {
+            if (activeTileIndex === null) return;
+            const tile = appState.tiles[activeTileIndex];
+            tile.photoDataUrl = createCardScenePhoto(tile.num);
+            tile.isCustomPhoto = false;
+            saveToStorage();
+            renderGrid();
+            openTileModal(activeTileIndex);
+            showToast('Reset square to default card scene');
+        }
+
+        function clearTileData() {
+            if (activeTileIndex === null) return;
+            appState.tiles[activeTileIndex].completed = false;
+            appState.tiles[activeTileIndex].photoDataUrl = null;
+            appState.tiles[activeTileIndex].isCustomPhoto = false;
+            saveToStorage();
+            renderGrid();
+            closeTileModal();
+            showToast('Photo removed & square unstamped');
+        }
+
+        // ==========================================================
+        // 7. CUSTOMIZE MODAL (EVENT META & 25 PROMPTS)
+        // ==========================================================
+        function openCustomizeModal() {
+            document.getElementById('input-title1').value = appState.meta.title1;
+            document.getElementById('input-title2').value = appState.meta.title2;
+            document.getElementById('input-note-tl').value = appState.meta.noteTL.replace(/\n/g, ' ');
+            document.getElementById('input-note-tr').value = appState.meta.noteTR.replace(/\n/g, ' ');
+            document.getElementById('input-default-email').value = appState.meta.defaultEmail || '';
+
+            renderCustomizeTaskInputs(appState.tiles.map(t => t.text));
+
+            document.body.classList.add('overflow-hidden');
+            const modal = document.getElementById('customize-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function renderCustomizeTaskInputs(taskTexts) {
+            const container = document.getElementById('custom-tasks-list');
+            container.innerHTML = '';
+            taskTexts.forEach((txt, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2';
+                row.innerHTML = `
+                    <span class="w-6 text-xs font-extrabold text-stone-500 text-right shrink-0">${idx + 1}.</span>
+                    <input type="text" data-task-idx="${idx}" value="${escapeAttr(txt)}" class="custom-task-input flex-1 px-2.5 py-1.5 rounded-lg border border-stone-300 focus:border-bingoHotPink focus:outline-none text-xs font-semibold" />
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function closeCustomizeModal() {
+            const modal = document.getElementById('customize-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        function resetToSamanthaDefaults() {
+            appState.meta = { ...DEFAULT_EVENT_META };
+            appState.recipientEmail = DEFAULT_EVENT_META.defaultEmail;
+            document.getElementById('input-title1').value = appState.meta.title1;
+            document.getElementById('input-title2').value = appState.meta.title2;
+            document.getElementById('input-note-tl').value = appState.meta.noteTL.replace(/\n/g, ' ');
+            document.getElementById('input-note-tr').value = appState.meta.noteTR.replace(/\n/g, ' ');
+            document.getElementById('input-default-email').value = appState.meta.defaultEmail;
+            renderCustomizeTaskInputs(SAMANTHA_DEFAULT_TASKS);
+            showToast('Restored default Samantha 40th tasks');
+        }
+
+        function saveCustomizations() {
+            appState.meta.title1 = (document.getElementById('input-title1').value || '').trim() || DEFAULT_EVENT_META.title1;
+            appState.meta.title2 = (document.getElementById('input-title2').value || '').trim() || DEFAULT_EVENT_META.title2;
+            appState.meta.noteTL = (document.getElementById('input-note-tl').value || '').trim() || DEFAULT_EVENT_META.noteTL;
+            appState.meta.noteTR = (document.getElementById('input-note-tr').value || '').trim() || DEFAULT_EVENT_META.noteTR;
+            const emailVal = (document.getElementById('input-default-email').value || '').trim();
+            appState.meta.defaultEmail = emailVal;
+            if (emailVal) {
+                appState.recipientEmail = emailVal;
+            }
+
+            const inputs = document.querySelectorAll('.custom-task-input');
+            inputs.forEach((inp, idx) => {
+                const val = inp.value.trim();
+                if (val && appState.tiles[idx]) {
+                    appState.tiles[idx].text = val;
+                }
+            });
+
+            saveToStorage();
+            renderPosterHeader();
+            renderGrid();
+            closeCustomizeModal();
+            showToast('Poster customizations saved!');
+        }
+
+        // ==========================================================
+        // 8. HIGH-RESOLUTION KEEPSAKE POSTER PNG GENERATOR (CANVAS)
+        // ==========================================================
+        async function buildPosterCanvasDataUrl() {
+            if (document.fonts && document.fonts.ready) {
+                try {
+                    await document.fonts.ready;
+                } catch (e) {}
+            }
+
+            const W = 1200;
+            const H = 1760;
+            const canvas = document.createElement('canvas');
+            canvas.width = W;
+            canvas.height = H;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, W, H);
+
+            const headerH = 270;
+            const grad = ctx.createLinearGradient(0, 0, 0, headerH);
+            grad.addColorStop(0, '#DCEAF5');
+            grad.addColorStop(1, '#FFFFFF');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, W, headerH);
+
+            ctx.save();
+            ctx.globalAlpha = 0.25;
+            ctx.fillStyle = '#C8102E';
+            ctx.beginPath(); ctx.moveTo(600, 135); ctx.lineTo(340, 0); ctx.lineTo(460, 0); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(600, 135); ctx.lineTo(740, 0); ctx.lineTo(860, 0); ctx.fill();
+            ctx.fillStyle = '#1B2A4A';
+            ctx.beginPath(); ctx.moveTo(600, 135); ctx.lineTo(530, 0); ctx.lineTo(670, 0); ctx.fill();
+            ctx.restore();
+
+            ctx.fillStyle = '#2C353F';
+            ctx.fillRect(0, 190, 180, 80);
+            ctx.fillRect(190, 95, 44, 175);
+            ctx.beginPath(); ctx.moveTo(190, 95); ctx.lineTo(212, 42); ctx.lineTo(234, 95); ctx.fill();
+            ctx.fillStyle = '#FFFDF5';
+            ctx.beginPath(); ctx.arc(212, 125, 15, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = '#C8102E';
+            ctx.fillRect(1010, 165, 165, 95);
+            ctx.strokeStyle = '#141414';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(1010, 165, 165, 95);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(1020, 204, 145, 34);
+            ctx.fillStyle = '#141414';
+            ctx.font = '800 10px "Plus Jakarta Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('LONDON • ADVENTURE', 1092, 217);
+            ctx.fillStyle = '#C8102E';
+            ctx.fillText('CAPTURE • CELEBRATE • REPEAT', 1092, 231);
+
+            drawNoteCard(ctx, 115, 58, 175, 86, -0.09, appState.meta.noteTL);
+            drawNoteCard(ctx, 1085, 58, 175, 86, 0.09, appState.meta.noteTR);
+
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#141414';
+            ctx.font = '72px "Luckiest Guy", sans-serif';
+            ctx.fillText(appState.meta.title1.toUpperCase(), 600, 108);
+
+            ctx.save();
+            ctx.translate(600, 152);
+            ctx.rotate(-0.02);
+            ctx.fillStyle = '#141414';
+            ctx.fillRect(-236, -28, 480, 62);
+            ctx.fillStyle = '#E61E6E';
+            ctx.fillRect(-242, -33, 480, 62);
+            ctx.strokeStyle = '#141414';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(-242, -33, 480, 62);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '46px "Luckiest Guy", sans-serif';
+            ctx.fillText(appState.meta.title2.toUpperCase(), 0, 14);
+            ctx.restore();
+
+            ctx.fillStyle = '#141414';
+            ctx.font = '700 48px "Caveat", cursive';
+            ctx.fillText(`${appState.meta.title3.toUpperCase()} ♥`, 600, 238);
+
+            ctx.strokeStyle = '#141414';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(0, headerH); ctx.lineTo(W, headerH); ctx.stroke();
+
+            const marginX = 36;
+            const gridTop = headerH + 22;
+            const gridW = W - marginX * 2;
+            const colW = gridW / 5;
+            const bingoHeaderH = 66;
+            const rowH = 242;
+
+            ctx.fillStyle = '#F45D96';
+            ctx.fillRect(marginX, gridTop, gridW, bingoHeaderH);
+            ctx.strokeStyle = '#141414';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(marginX, gridTop, gridW, bingoHeaderH);
+
+            const letters = ['B', 'I', 'N', 'G', 'O'];
+            ctx.fillStyle = '#141414';
+            ctx.font = '46px "Alfa Slab One", serif';
+            ctx.textAlign = 'center';
+            letters.forEach((L, i) => {
+                const cx = marginX + i * colW + colW / 2;
+                ctx.fillText(L, cx, gridTop + 50);
+                if (i > 0) {
+                    ctx.beginPath();
+                    ctx.moveTo(marginX + i * colW, gridTop);
+                    ctx.lineTo(marginX + i * colW, gridTop + bingoHeaderH);
+                    ctx.stroke();
+                }
+            });
+
+            const loadedImgs = await Promise.all(
+                appState.tiles.map(tile => {
+                    if (!tile.photoDataUrl) return Promise.resolve(null);
+                    return new Promise(resolve => {
+                        const im = new Image();
+                        im.onload = () => resolve(im);
+                        im.onerror = () => resolve(null);
+                        im.src = tile.photoDataUrl;
+                    });
+                })
+            );
+
+            const cellsTop = gridTop + bingoHeaderH;
+            for (let idx = 0; idx < 25; idx++) {
+                const r = Math.floor(idx / 5);
+                const c = idx % 5;
+                const x = marginX + c * colW;
+                const y = cellsTop + r * rowH;
+                const tile = appState.tiles[idx];
+
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(x, y, colW, rowH);
+                ctx.strokeStyle = '#141414';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(x, y, colW, rowH);
+
+                ctx.fillStyle = '#141414';
+                ctx.font = '700 14.5px "Plus Jakarta Sans", sans-serif';
+                ctx.textAlign = 'center';
+                const promptFull = `${tile.num}. ${tile.text}`;
+                const lines = wrapCanvasText(ctx, promptFull, colW - 18).slice(0, 3);
+                lines.forEach((ln, li) => {
+                    ctx.fillText(ln, x + colW / 2, y + 21 + li * 17);
+                });
+
+                const pad = 10;
+                const boxY = y + 72;
+                const boxH = rowH - 82;
+                const boxW = colW - pad * 2;
+                const boxX = x + pad;
+
+                const im = loadedImgs[idx];
+                if (im) {
+                    drawImageCover(ctx, im, boxX, boxY, boxW, boxH);
+                    ctx.strokeStyle = tile.completed ? '#E61E6E' : '#141414';
+                    ctx.lineWidth = tile.completed ? 3.5 : 2;
+                    ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+                    if (tile.completed) {
+                        ctx.fillStyle = '#E61E6E';
+                        ctx.beginPath();
+                        ctx.arc(boxX + boxW - 16, boxY + boxH - 16, 12, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.strokeStyle = '#FFFFFF';
+                        ctx.lineWidth = 2.5;
+                        ctx.beginPath();
+                        ctx.moveTo(boxX + boxW - 21, boxY + boxH - 16);
+                        ctx.lineTo(boxX + boxW - 17, boxY + boxH - 12);
+                        ctx.lineTo(boxX + boxW - 11, boxY + boxH - 20);
+                        ctx.stroke();
+                    }
+                } else {
+                    ctx.fillStyle = '#FAF8F5';
+                    ctx.fillRect(boxX, boxY, boxW, boxH);
+                    ctx.strokeStyle = '#D6D3D1';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(boxX, boxY, boxW, boxH);
+                }
+            }
+
+            const footerTop = cellsTop + rowH * 5 + 20;
+            const footerH = H - footerTop;
+            const fGrad = ctx.createLinearGradient(0, footerTop, 0, H);
+            fGrad.addColorStop(0, '#FFFFFF');
+            fGrad.addColorStop(1, '#DCEAF5');
+            ctx.fillStyle = fGrad;
+            ctx.fillRect(0, footerTop, W, footerH);
+
+            ctx.fillStyle = '#141414';
+            ctx.font = '700 24px "Caveat", cursive';
+            ctx.textAlign = 'left';
+            appState.meta.noteBL.split('\n').forEach((line, i) => {
+                ctx.fillText(line, 44, footerTop + 34 + i * 26);
+            });
+
+            ctx.textAlign = 'right';
+            appState.meta.noteBR.split('\n').forEach((line, i) => {
+                ctx.fillText(line, W - 44, footerTop + 34 + i * 26);
+            });
+
+            ctx.save();
+            ctx.translate(600, footerTop + 56);
+            ctx.rotate(-0.04);
+            ctx.fillStyle = '#141414';
+            ctx.fillRect(-174, -30, 356, 68);
+            ctx.fillStyle = '#E61E6E';
+            ctx.fillRect(-180, -35, 356, 68);
+            ctx.strokeStyle = '#141414';
+            ctx.lineWidth = 3.5;
+            ctx.strokeRect(-180, -35, 356, 68);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.textAlign = 'center';
+            ctx.font = '700 28px "Caveat", cursive';
+            ctx.fillText('LONDON CALLING', 0, -4);
+            ctx.font = '700 22px "Caveat", cursive';
+            ctx.fillText('(AND SO ARE WE!)', 0, 22);
+            ctx.restore();
+
+            ctx.fillStyle = '#182232';
+            ctx.fillRect(0, H - 36, W, 36);
+            ctx.fillRect(70, H - 96, 26, 60);
+            ctx.beginPath(); ctx.moveTo(70, H - 96); ctx.lineTo(83, H - 116); ctx.lineTo(96, H - 96); ctx.fill();
+            ctx.fillRect(500, H - 90, 28, 54);
+            ctx.fillRect(670, H - 90, 28, 54);
+            ctx.fillRect(528, H - 76, 142, 8);
+            ctx.strokeStyle = '#182232';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.arc(980, H - 62, 42, 0, Math.PI * 2); ctx.stroke();
+
+            ctx.strokeStyle = '#141414';
+            ctx.lineWidth = 10;
+            ctx.strokeRect(5, 5, W - 10, H - 10);
+
+            const dataUrl = canvas.toDataURL('image/png');
+            cachedPosterDataUrl = dataUrl;
+            return dataUrl;
+        }
+
+        function dataUrlToBlob(dataUrl) {
+            const parts = dataUrl.split(',');
+            const mime = parts[0].match(/:(.*?);/)[1];
+            const byteString = atob(parts[1]);
+            const len = byteString.length;
+            const u8arr = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                u8arr[i] = byteString.charCodeAt(i);
+            }
+            return new Blob([u8arr], { type: mime });
+        }
+
+        function triggerPosterDownloadFromDataUrl(dataUrl) {
+            const safeSlug = appState.meta.title1.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const playerSlug = appState.playerName
+                ? '-' + appState.playerName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+                : '';
+            const filename = `${safeSlug}${playerSlug}-london-photo-bingo.png`;
+
+            try {
+                const blob = dataUrlToBlob(dataUrl);
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+            } catch (e) {
+                const win = window.open();
+                if (win) {
+                    win.document.write(`<title>${filename}</title><p style="font-family:sans-serif;text-align:center;">Press and hold the image to save your poster:</p><img src="${dataUrl}" style="max-width:100%;display:block;margin:0 auto;" />`);
+                }
+            }
+        }
+
+        async function exportPosterPng() {
+            const btn = document.getElementById('export-btn');
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span>Rendering...</span>`;
+
+            try {
+                const dataUrl = await buildPosterCanvasDataUrl();
+                triggerPosterDownloadFromDataUrl(dataUrl);
+                showToast('Keepsake Poster PNG ready!');
+            } catch (err) {
+                console.error('Export error:', err);
+                showToast('Could not generate image. Try again.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                lucide.createIcons();
+            }
+        }
+
+        function drawNoteCard(ctx, cx, cy, w, h, angle, text) {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(angle);
+            ctx.fillStyle = '#FFFDF9';
+            ctx.fillRect(-w / 2, -h / 2, w, h);
+            ctx.strokeStyle = 'rgba(20,20,20,0.2)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-w / 2, -h / 2, w, h);
+            ctx.fillStyle = '#141414';
+            ctx.font = '700 24px "Caveat", cursive';
+            ctx.textAlign = 'center';
+            const lines = text.split('\n');
+            lines.forEach((l, i) => {
+                ctx.fillText(l, 0, -6 + i * 26);
+            });
+            ctx.restore();
+        }
+
+        function drawImageCover(ctx, img, x, y, w, h) {
+            const imgRatio = img.width / img.height;
+            const boxRatio = w / h;
+            let sx = 0, sy = 0, sw = img.width, sh = img.height;
+            if (imgRatio > boxRatio) {
+                sw = img.height * boxRatio;
+                sx = (img.width - sw) / 2;
+            } else {
+                sh = img.width / boxRatio;
+                sy = (img.height - sh) / 2;
+            }
+            ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+        }
+
+        function wrapCanvasText(ctx, text, maxWidth) {
+            const words = text.split(' ');
+            const lines = [];
+            let current = '';
+            for (const word of words) {
+                const test = current ? current + ' ' + word : word;
+                if (ctx.measureText(test).width > maxWidth && current) {
+                    lines.push(current);
+                    current = word;
+                } else {
+                    current = test;
+                }
+            }
+            if (current) lines.push(current);
+            return lines;
+        }
+
+        // ==========================================================
+        // 9. SHUFFLE CARD (FOR GROUP PLAY)
+        // ==========================================================
+        function confirmShuffle() {
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.getElementById('confirm-modal-ok').onclick = () => {
+                shuffleCard();
+                closeConfirmModal();
+            };
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function shuffleCard() {
+            const taskPool = appState.tiles.map(t => ({ num: t.num, text: t.text }));
+            for (let i = taskPool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [taskPool[i], taskPool[j]] = [taskPool[j], taskPool[i]];
+            }
+            appState.tiles = taskPool.map((item, idx) => ({
+                num: idx + 1,
+                text: item.text,
+                completed: false,
+                photoDataUrl: createCardScenePhoto(item.num),
+                isCustomPhoto: false
+            }));
+            appState.celebratedLines = 0;
+            saveToStorage();
+            renderGrid();
+            showToast('Dealt a fresh shuffled Bingo card!');
+        }
+
+        // ==========================================================
+        // 10. SHARE WITH FRIENDS (SCORECARD & GROUP INVITE LINK)
+        // ==========================================================
+        function openShareModal() {
+            document.body.classList.add('overflow-hidden');
+            const modal = document.getElementById('share-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeShareModal() {
+            const modal = document.getElementById('share-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        async function copyEmojiScorecard() {
+            const completed = appState.tiles.filter(t => t.completed).length;
+            const { lines } = evaluateLines();
+            let gridStr = '';
+            for (let r = 0; r < 5; r++) {
+                let rowStr = '';
+                for (let c = 0; c < 5; c++) {
+                    const tile = appState.tiles[r * 5 + c];
+                    rowStr += tile.completed ? (tile.isCustomPhoto ? '📸' : '💖') : '⬜';
+                }
+                gridStr += rowStr + '\n';
+            }
+
+            const summary = `${appState.meta.title1} ${appState.meta.title2} PHOTO BINGO ♥\nStamped: ${completed}/25 (${lines} BINGO ${lines === 1 ? 'line' : 'lines'})\n\n${gridStr}`;
+            const ok = await copyTextSafe(summary);
+            if (ok) {
+                showToast('Emoji scorecard copied!');
+                closeShareModal();
+            } else {
+                showToast('Could not copy automatically');
+            }
+        }
+
+        async function copyInviteUrl() {
+            const baseUrl = window.location.href.split('#')[0];
+            let shareUrl = baseUrl;
+            try {
+                const payload = {
+                    meta: appState.meta,
+                    defaultEmail: appState.meta.defaultEmail || appState.recipientEmail || '',
+                    tasks: appState.tiles.map(t => t.text)
+                };
+                const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
+                shareUrl = `${baseUrl}#event=${encoded}`;
+            } catch (e) {}
+
+            const msg = `Join ${appState.meta.title1} ${appState.meta.title2} Photo Bingo in London! 🇬🇧📸 Tap to open your card:\n${shareUrl}`;
+            const ok = await copyTextSafe(msg);
+            if (ok) {
+                showToast('Group invite link copied!');
+                closeShareModal();
+            } else {
+                showToast('Could not copy link automatically');
+            }
+        }
+
+        // ==========================================================
+        // 11. EMAIL RESULTS & POSTER MODAL WORKFLOW
+        // ==========================================================
+        function buildEmailSubject() {
+            const done = appState.tiles.filter(t => t.completed).length;
+            const playerPart = appState.playerName.trim() ? ` - ${appState.playerName.trim()}` : '';
+            return `${appState.meta.title1} ${appState.meta.title2} Photo Bingo Results${playerPart} (${done}/25!)`;
+        }
+
+        function buildFullEmailBody() {
+            const done = appState.tiles.filter(t => t.completed).length;
+            const customPhotosCount = appState.tiles.filter(t => t.isCustomPhoto).length;
+            const { lines, isFullHouse } = evaluateLines();
+
+            let emojiGrid = '';
+            for (let r = 0; r < 5; r++) {
+                let row = '';
+                for (let c = 0; c < 5; c++) {
+                    const tile = appState.tiles[r * 5 + c];
+                    row += tile.completed ? (tile.isCustomPhoto ? '📸' : '💖') : '⬜';
+                }
+                emojiGrid += row + '\n';
+            }
+
+            const statusLine = isFullHouse
+                ? '👑 FULL HOUSE BINGO (ALL 25 STAMPED!)'
+                : lines > 0
+                ? `🎉 BINGO ACHIEVED! (${lines} ${lines === 1 ? 'Line' : 'Lines'} Completed)`
+                : '🇬🇧 London Photo Bingo Progress';
+
+            const checklist = appState.tiles.map(tile => {
+                const mark = tile.completed ? (tile.isCustomPhoto ? '[📸 DONE]' : '[✅ DONE]') : '[⬜ OPEN]';
+                return `${mark} ${tile.num}. ${tile.text}`;
+            }).join('\n');
+
+            const playerIntro = appState.playerName.trim()
+                ? `Player / Team: ${appState.playerName.trim()}\n`
+                : '';
+
+            return `${appState.meta.title1} ${appState.meta.title2} PHOTO BINGO ♥\n${playerIntro}Stamped: ${done}/25 (${customPhotosCount} Custom Photos Taken)\nStatus: ${statusLine}\n\nB-I-N-G-O SCORECARD:\n${emojiGrid}\nCHALLENGE CHECKLIST:\n${checklist}\n\n(Note: Don't forget to attach the downloaded keepsake PNG poster if sending from a computer!)`;
+        }
+
+        async function openEmailModal() {
+            document.body.classList.add('overflow-hidden');
+            const modal = document.getElementById('email-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            document.getElementById('email-player-name').value = appState.playerName || '';
+            document.getElementById('email-recipient-input').value =
+                appState.recipientEmail || appState.meta.defaultEmail || 'jnicoll83@googlemail.com';
+
+            refreshEmailModalPreview();
+            lucide.createIcons();
+
+            const thumbImg = document.getElementById('email-poster-thumb');
+            const thumbLoading = document.getElementById('email-poster-thumb-loading');
+            thumbImg.classList.add('hidden');
+            thumbLoading.classList.remove('hidden');
+
+            try {
+                const dataUrl = await buildPosterCanvasDataUrl();
+                thumbImg.src = dataUrl;
+                thumbImg.classList.remove('hidden');
+                thumbLoading.classList.add('hidden');
+            } catch (e) {
+                thumbLoading.textContent = 'Poster Ready';
+            }
+        }
+
+        function closeEmailModal() {
+            const modal = document.getElementById('email-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        function onEmailFieldsChanged() {
+            appState.playerName = document.getElementById('email-player-name').value;
+            appState.recipientEmail = document.getElementById('email-recipient-input').value;
+            saveToStorage();
+            refreshEmailModalPreview();
+        }
+
+        function refreshEmailModalPreview() {
+            const done = appState.tiles.filter(t => t.completed).length;
+            const customPhotos = appState.tiles.filter(t => t.isCustomPhoto).length;
+            const { lines, isFullHouse } = evaluateLines();
+
+            document.getElementById('email-score-badge').textContent = `${done} / 25 Stamped`;
+            document.getElementById('email-lines-badge').textContent = `${lines} ${lines === 1 ? 'Line' : 'Lines'}`;
+            document.getElementById('email-photos-count').textContent = `25 card photos (${customPhotos} custom photos taken) in your poster.`;
+            document.getElementById('email-preview-headline').textContent = isFullHouse
+                ? '👑 Full House! Send your winning poster!'
+                : lines > 0
+                ? '🎉 BINGO achieved! Ready to send!'
+                : 'Ready to send your London Photo Bingo results!';
+
+            document.getElementById('email-body-preview').textContent = buildFullEmailBody();
+        }
+
+        async function sharePosterAndResultsNative() {
+            const subject = buildEmailSubject();
+            const text = buildFullEmailBody();
+
+            try {
+                const dataUrl = cachedPosterDataUrl || (await buildPosterCanvasDataUrl());
+                const blob = dataUrlToBlob(dataUrl);
+                const safeSlug = appState.meta.title1.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const file = new File([blob], `${safeSlug}-london-photo-bingo.png`, { type: 'image/png' });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: subject,
+                        text: text,
+                        files: [file]
+                    });
+                    showToast('Shared poster & results!');
+                    return;
+                } else if (navigator.share) {
+                    await navigator.share({
+                        title: subject,
+                        text: text
+                    });
+                    triggerPosterDownloadFromDataUrl(dataUrl);
+                    showToast('Shared text & saved PNG poster!');
+                    return;
+                }
+            } catch (err) {
+                if (err && err.name === 'AbortError') return;
+                console.warn('Native file share fallback:', err);
+            }
+
+            showToast('Opening email app & saving poster!');
+            await openMailtoAndDownloadPoster();
+        }
+
+        async function openMailtoAndDownloadPoster() {
+            const recipient = (document.getElementById('email-recipient-input').value || '').trim();
+            const subject = buildEmailSubject();
+            const body = buildFullEmailBody();
+
+            const dataUrl = cachedPosterDataUrl || (await buildPosterCanvasDataUrl());
+            triggerPosterDownloadFromDataUrl(dataUrl);
+
+            const truncatedBody = body.length > 1750
+                ? body.slice(0, 1750) + '\n...\n(Attach the saved keepsake PNG poster for full photo proof!)'
+                : body;
+
+            const mailtoHref = `mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(truncatedBody)}`;
+            window.location.href = mailtoHref;
+
+            showToast('Poster saved & email draft opened!');
+        }
+
+        async function copyEmailSummaryAndDownload() {
+            const recipient = (document.getElementById('email-recipient-input').value || '').trim();
+            const subject = buildEmailSubject();
+            const body = buildFullEmailBody();
+            const fullClipboardText = `${recipient ? 'To: ' + recipient + '\n' : ''}Subject: ${subject}\n\n${body}`;
+
+            await copyTextSafe(fullClipboardText);
+            const dataUrl = cachedPosterDataUrl || (await buildPosterCanvasDataUrl());
+            triggerPosterDownloadFromDataUrl(dataUrl);
+
+            showToast('Email summary copied & poster PNG ready!');
+        }
+
+        // ==========================================================
+        // 12. HELPERS
+        // ==========================================================
+        function escapeAttr(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        async function copyTextSafe(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                } catch (e) {}
+            }
+
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.top = '0';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+
+            const range = document.createRange();
+            range.selectNodeContents(ta);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            ta.setSelectionRange(0, text.length);
+
+            let ok = false;
+            try {
+                ok = document.execCommand('copy');
+            } catch (e) {}
+
+            sel.removeAllRanges();
+            document.body.removeChild(ta);
+            return ok;
+        }
+
+        let toastTimer = null;
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.classList.remove('opacity-0');
+            el.classList.add('opacity-100');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                el.classList.remove('opacity-100');
+                el.classList.add('opacity-0');
+            }, 2500);
+        }
+
+        // ==========================================================
+        // 13. INITIALIZE ON LOAD
+        // ==========================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            checkSharedUrlHash();
+            renderPosterHeader();
+            renderGrid();
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
