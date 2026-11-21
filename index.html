@@ -130,8 +130,8 @@
                     <span class="hidden md:inline">Load Photos</span>
                 </button>
 
-                <button type="button" onclick="openCustomizeModal()" class="bg-white/10 hover:bg-white/20 active:scale-95 transition text-white text-xs font-bold px-2.5 py-2 rounded-lg flex items-center gap-1.5" title="Edit Name & Tasks">
-                    <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-bingoPink"></i>
+                <button type="button" id="customize-btn" disabled aria-disabled="true" onclick="openCustomizeModal()" class="bg-white/5 text-white/40 text-xs font-bold px-2.5 py-2 rounded-lg flex items-center gap-1.5 opacity-50 cursor-not-allowed pointer-events-none select-none" title="Customization Disabled">
+                    <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-bingoPink/60"></i>
                     <span class="hidden sm:inline">Customize</span>
                 </button>
 
@@ -347,7 +347,8 @@ Forty & Fabulous ♥</p>
     </main>
 
     <!-- Hidden File Inputs for Single Photo & Batch Numbered Photos (1.JPG..25.JPG) -->
-    <input type="file" id="photo-file-input" accept="image/*" class="hidden" onchange="handlePhotoSelected(event)">
+    <input type="file" id="photo-file-input" accept="image/*" capture="environment" class="hidden" onchange="handlePhotoSelected(event)">
+    <input type="file" id="gallery-file-input" accept="image/*" class="hidden" onchange="handlePhotoSelected(event)">
     <input type="file" id="batch-photo-input" accept="image/*" multiple class="hidden" onchange="handleBatchPhotosSelected(event)">
 
     <!-- ========================================================= -->
@@ -381,10 +382,17 @@ Forty & Fabulous ♥</p>
             </div>
 
             <div class="space-y-2.5">
-                <button type="button" onclick="triggerPhotoPicker()" class="w-full py-3 px-4 rounded-xl bg-bingoHotPink hover:bg-pink-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md border-2 border-bingoDark">
-                    <i data-lucide="camera" class="w-4 h-4"></i>
-                    <span id="modal-upload-btn-text">Replace / Camera Photo</span>
-                </button>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button type="button" onclick="triggerPhotoPicker('camera')" class="w-full py-3 px-4 rounded-xl bg-bingoHotPink hover:bg-pink-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md border-2 border-bingoDark">
+                        <i data-lucide="camera" class="w-4 h-4"></i>
+                        <span id="modal-upload-btn-text">Take New Photo</span>
+                    </button>
+
+                    <button type="button" onclick="triggerPhotoPicker('gallery')" class="w-full py-3 px-4 rounded-xl bg-white hover:bg-pink-50 text-bingoDark font-bold text-sm flex items-center justify-center gap-2 shadow-sm border-2 border-bingoDark">
+                        <i data-lucide="image" class="w-4 h-4 text-bingoHotPink"></i>
+                        <span>Choose Existing</span>
+                    </button>
+                </div>
 
                 <div class="grid grid-cols-2 gap-2">
                     <button type="button" onclick="toggleTileCheckOnly()" id="modal-check-btn" class="py-2.5 px-3 rounded-xl bg-paperCream hover:bg-stone-100 text-bingoDark font-bold text-xs flex items-center justify-center gap-1.5 border-2 border-bingoDark">
@@ -524,6 +532,45 @@ Forty & Fabulous ♥</p>
                 </button>
                 <button type="button" id="confirm-modal-ok" class="flex-1 py-2.5 rounded-xl bg-bingoHotPink text-white font-bold text-sm border-2 border-bingoDark shadow-[2px_2px_0px_#141414]">
                     Shuffle Card
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- LIVE CAMERA MODAL FALLBACK (FOR DESKTOP / WEBVIEW / CHROME) -->
+    <!-- ========================================================= -->
+    <div id="live-camera-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-bingoDark text-white rounded-t-3xl sm:rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border-t-4 sm:border-4 border-bingoPink">
+            <div class="p-4 border-b border-white/10 flex items-center justify-between">
+                <div>
+                    <span id="live-camera-badge" class="inline-block bg-bingoHotPink text-white font-slab text-[11px] px-2.5 py-0.5 rounded-md">
+                        #1
+                    </span>
+                    <h3 id="live-camera-title" class="font-bold text-sm text-white mt-1 leading-snug">
+                        Take a selfie with a red phone box
+                    </h3>
+                </div>
+                <button type="button" onclick="closeLiveCameraModal()" class="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white shrink-0">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="relative w-full aspect-[4/3] bg-black flex items-center justify-center overflow-hidden">
+                <video id="live-camera-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                <canvas id="live-camera-canvas" class="hidden"></canvas>
+                <p id="live-camera-status" class="text-xs text-stone-300 px-4 text-center">Starting camera...</p>
+            </div>
+
+            <div class="p-4 bg-bingoDark flex items-center justify-between gap-2.5">
+                <button type="button" onclick="closeLiveCameraModal(); triggerPhotoPicker('gallery');" class="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5">
+                    <i data-lucide="image" class="w-4 h-4 text-bingoPink"></i>
+                    <span>Gallery</span>
+                </button>
+
+                <button type="button" onclick="captureLiveCameraPhoto()" class="flex-1 py-3 px-4 rounded-xl bg-bingoHotPink hover:bg-pink-600 text-white font-extrabold text-sm flex items-center justify-center gap-2 border-2 border-white shadow-lg">
+                    <i data-lucide="aperture" class="w-4 h-4"></i>
+                    <span>Snap Photo</span>
                 </button>
             </div>
         </div>
@@ -897,7 +944,7 @@ Forty & Fabulous ♥</p>
                 camBtn.onclick = (e) => {
                     e.stopPropagation();
                     activeTileIndex = idx;
-                    triggerPhotoPicker();
+                    triggerPhotoPicker('camera');
                 };
                 camBtn.className = 'py-1 px-1 rounded bg-stone-100 hover:bg-pink-100 text-bingoDark text-[8.5px] sm:text-[10px] font-bold flex items-center justify-center gap-0.5 border border-stone-300';
                 camBtn.innerHTML = `<span>📷</span><span class="truncate">Camera</span>`;
@@ -1021,12 +1068,12 @@ Forty & Fabulous ♥</p>
                 imgEl.src = tile.photoDataUrl;
                 imgEl.classList.remove('hidden');
                 placeholderEl.classList.add('hidden');
-                uploadBtnText.textContent = 'Replace / Camera Photo';
+                uploadBtnText.textContent = 'Take New Photo';
             } else {
                 imgEl.src = '';
                 imgEl.classList.add('hidden');
                 placeholderEl.classList.remove('hidden');
-                uploadBtnText.textContent = 'Take / Upload Photo Proof';
+                uploadBtnText.textContent = 'Take New Photo';
             }
 
             checkBtnText.textContent = tile.completed ? 'Unstamp Done' : 'Toggle Done / Stamp';
@@ -1046,14 +1093,109 @@ Forty & Fabulous ♥</p>
             activeTileIndex = null;
         }
 
-        function triggerPhotoPicker() {
-            const input = document.getElementById('photo-file-input');
-            input.value = '';
-            input.click();
+        let liveCameraStream = null;
+
+        function canUseLiveCameraFallback() {
+            const hasMediaDevices = Boolean(navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function');
+            const isSecureOrigin = window.isSecureContext || ['localhost', '127.0.0.1'].includes(window.location.hostname);
+            const isDesktopOrNonMobile = !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            return hasMediaDevices && isSecureOrigin && isDesktopOrNonMobile;
         }
 
-        function triggerBatchPhotoPicker() {
-            const input = document.getElementById('batch-photo-input');
+        async function openLiveCameraModal() {
+            if (activeTileIndex === null) return;
+            const tile = appState.tiles[activeTileIndex];
+            document.getElementById('live-camera-badge').textContent = `#${tile.num} (${tile.num}.JPG)`;
+            document.getElementById('live-camera-title').textContent = tile.text;
+            document.getElementById('live-camera-status').textContent = 'Requesting camera permission...';
+
+            const modal = document.getElementById('live-camera-modal');
+            document.body.classList.add('overflow-hidden');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+
+            stopLiveCameraStream();
+            try {
+                liveCameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: 'environment' } },
+                    audio: false
+                });
+                const videoEl = document.getElementById('live-camera-video');
+                videoEl.srcObject = liveCameraStream;
+                document.getElementById('live-camera-status').textContent = '';
+            } catch (err) {
+                console.warn('Live camera fallback error:', err);
+                closeLiveCameraModal();
+                const galleryInput = document.getElementById('gallery-file-input');
+                galleryInput.value = '';
+                galleryInput.click();
+            }
+        }
+
+        function stopLiveCameraStream() {
+            if (liveCameraStream) {
+                liveCameraStream.getTracks().forEach(track => track.stop());
+                liveCameraStream = null;
+            }
+            const videoEl = document.getElementById('live-camera-video');
+            if (videoEl) {
+                videoEl.srcObject = null;
+            }
+        }
+
+        function closeLiveCameraModal() {
+            stopLiveCameraStream();
+            const modal = document.getElementById('live-camera-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            if (document.getElementById('tile-modal').classList.contains('hidden')) {
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        function applyCapturedPhotoToActiveTile(rawDataUrl) {
+            if (activeTileIndex === null) return;
+            const idx = activeTileIndex;
+            compressImageDataUrl(rawDataUrl, 520, 0.82, (compressedDataUrl) => {
+                const challengeNum = appState.tiles[idx].num;
+                uploadedNumberedPhotos[challengeNum] = compressedDataUrl;
+                appState.tiles[idx].photoDataUrl = compressedDataUrl;
+                appState.tiles[idx].isCustomPhoto = true;
+                appState.tiles[idx].completed = true;
+
+                saveToStorage();
+                renderGrid();
+                if (!document.getElementById('tile-modal').classList.contains('hidden')) {
+                    openTileModal(idx);
+                }
+                showToast(`Photo stamped onto #${challengeNum}!`);
+            });
+        }
+
+        function captureLiveCameraPhoto() {
+            const videoEl = document.getElementById('live-camera-video');
+            const canvasEl = document.getElementById('live-camera-canvas');
+            if (!videoEl || !videoEl.videoWidth || !videoEl.videoHeight) {
+                showToast('Camera not ready yet');
+                return;
+            }
+            canvasEl.width = videoEl.videoWidth;
+            canvasEl.height = videoEl.videoHeight;
+            const ctx = canvasEl.getContext('2d');
+            ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+            const snappedUrl = canvasEl.toDataURL('image/jpeg', 0.88);
+            closeLiveCameraModal();
+            applyCapturedPhotoToActiveTile(snappedUrl);
+        }
+
+        function triggerPhotoPicker(mode = 'camera') {
+            if (mode === 'camera' && canUseLiveCameraFallback()) {
+                openLiveCameraModal();
+                return;
+            }
+            const inputId = mode === 'gallery' ? 'gallery-file-input' : 'photo-file-input';
+            const input = document.getElementById(inputId);
             input.value = '';
             input.click();
         }
@@ -1085,23 +1227,9 @@ Forty & Fabulous ♥</p>
             const file = event.target.files && event.target.files[0];
             if (!file || activeTileIndex === null) return;
 
-            const idx = activeTileIndex;
             const reader = new FileReader();
             reader.onload = function (e) {
-                compressImageDataUrl(e.target.result, 520, 0.82, (compressedDataUrl) => {
-                    const challengeNum = appState.tiles[idx].num;
-                    uploadedNumberedPhotos[challengeNum] = compressedDataUrl;
-                    appState.tiles[idx].photoDataUrl = compressedDataUrl;
-                    appState.tiles[idx].isCustomPhoto = true;
-                    appState.tiles[idx].completed = true;
-
-                    saveToStorage();
-                    renderGrid();
-                    if (!document.getElementById('tile-modal').classList.contains('hidden')) {
-                        openTileModal(idx);
-                    }
-                    showToast(`Photo stamped onto #${challengeNum}!`);
-                });
+                applyCapturedPhotoToActiveTile(e.target.result);
             };
             reader.readAsDataURL(file);
         }
@@ -1179,6 +1307,10 @@ Forty & Fabulous ♥</p>
         // 7. CUSTOMIZE MODAL (EVENT META & 25 PROMPTS)
         // ==========================================================
         function openCustomizeModal() {
+            const customizeBtn = document.getElementById('customize-btn');
+            if (!customizeBtn || customizeBtn.disabled || customizeBtn.getAttribute('aria-disabled') === 'true') {
+                return;
+            }
             document.getElementById('input-title1').value = appState.meta.title1;
             document.getElementById('input-title2').value = appState.meta.title2;
             document.getElementById('input-note-tl').value = appState.meta.noteTL.replace(/\n/g, ' ');
